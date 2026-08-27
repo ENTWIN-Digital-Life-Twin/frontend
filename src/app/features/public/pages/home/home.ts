@@ -572,7 +572,7 @@ const WEEKLY_BARS = [45, 68, 58, 82, 64, 90, 74];
         </p>
       </div>
 
-      <div appReveal class="relative mt-14 overflow-x-clip" appMouseGlow aria-hidden="true">
+      <div appReveal class="relative mt-14 overflow-x-clip" aria-hidden="true">
         <div
           class="pointer-events-none absolute -inset-6 rounded-[2.5rem] bg-gradient-to-br from-primary/10 via-transparent to-accent/10 blur-2xl"
         ></div>
@@ -737,7 +737,7 @@ export class HomeComponent {
       const observer = new IntersectionObserver(
         (entries) => {
           if (entries[0].isIntersecting) {
-            this.startCountUpAnimation();
+            this.scheduleCountUpAnimation();
             observer.disconnect();
           }
         },
@@ -751,7 +751,7 @@ export class HomeComponent {
     });
   }
 
-  private startCountUpAnimation(): void {
+  private scheduleCountUpAnimation(): void {
     if (this.animationStarted) return;
     this.animationStarted = true;
 
@@ -764,6 +764,14 @@ export class HomeComponent {
       return;
     }
 
+    const schedule = (window as Window & { requestIdleCallback?: (cb: IdleRequestCallback) => number }).requestIdleCallback
+      ? (window as Window & { requestIdleCallback: (cb: IdleRequestCallback) => number }).requestIdleCallback
+      : ((cb: () => void) => setTimeout(cb, 50));
+
+    schedule(() => this.startCountUpAnimation());
+  }
+
+  private startCountUpAnimation(): void {
     const duration = HomeComponent.ANIMATION_DURATION;
     const start = performance.now();
 
