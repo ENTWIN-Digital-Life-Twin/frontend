@@ -69,15 +69,24 @@ export class LanguageService {
     if (this.loadedLanguages.has(lang)) return;
     this.loadedLanguages.add(lang);
 
+    const apply = () => {
+      // Only invalidate every translated binding when the loaded language can
+      // change what is currently displayed. Loading en/ar in the background
+      // while FR is active must not re-render the whole page.
+      if (lang === this.activeLanguage()) {
+        this.translationsReady.update((v) => v + 1);
+      }
+    };
+
     if (lang === 'en') {
       import('../i18n/en').then((m) => {
         this.translations.en = m.EN_TRANSLATIONS;
-        this.translationsReady.update((v) => v + 1);
+        apply();
       });
     } else {
       import('../i18n/ar').then((m) => {
         this.translations.ar = m.AR_TRANSLATIONS;
-        this.translationsReady.update((v) => v + 1);
+        apply();
       });
     }
   }

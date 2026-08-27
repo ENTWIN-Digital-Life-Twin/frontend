@@ -269,10 +269,14 @@
 
   .animate-float {
     animation: dlt-float 7s ease-in-out infinite;
+    will-change: transform;
   }
 
   .animate-glow-pulse {
     animation: dlt-glow-pulse 6s ease-in-out infinite;
+    /* Promote to its own compositor layer so the opacity/transform keyframes
+       never run (or get invalidated) on the main thread. */
+    will-change: transform, opacity;
   }
 
   /* Wizard step transitions — direction-aware, mirrored in RTL */
