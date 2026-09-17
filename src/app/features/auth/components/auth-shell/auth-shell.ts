@@ -43,8 +43,10 @@ import { AuthFooter } from '../auth-footer/auth-footer';
           </div>
         </header>
 
-        <main class="relative flex flex-1 items-center justify-center px-4 py-6 sm:px-8 lg:px-12">
-          <ng-content />
+        <main class="relative flex flex-1 flex-col overflow-y-auto px-4 py-8 sm:px-8 lg:px-12">
+          <div class="my-auto w-full">
+            <ng-content />
+          </div>
         </main>
 
         <div class="relative z-10 px-4 pb-6 pt-2 sm:px-8 lg:px-12">

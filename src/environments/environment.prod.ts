@@ -5,4 +5,5 @@ export const environment = {
   wellnessApiUrl: '/api/v1',
   notificationApiUrl: '/api/v1',
   aiApiUrl: '/api/v1',
+  googleClientId: '',
 };

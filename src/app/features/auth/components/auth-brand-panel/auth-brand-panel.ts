@@ -108,11 +108,17 @@ export class AuthBrandPanel {
 
   protected readonly stories = computed(() => {
     const stories = this.tr<BrandStory[]>('auth.brand.stories');
+    if (!Array.isArray(stories)) {
+      return [];
+    }
     return stories.map((story, index) => ({
       ...story,
       icon: STORY_ICONS[index] ?? LucideSparkles,
     }));
   });
 
-  protected readonly stats = computed<BrandStat[]>(() => this.tr<BrandStat[]>('auth.brand.stats'));
+  protected readonly stats = computed<BrandStat[]>(() => {
+    const stats = this.tr<BrandStat[]>('auth.brand.stats');
+    return Array.isArray(stats) ? stats : [];
+  });
 }

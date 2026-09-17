@@ -19,3 +19,28 @@ export const authGuard: CanActivateFn = () => {
 
   return languageService.ensureActiveLanguageLoaded().then(() => true);
 };
+
+/** Sends first-time users (Google or email) to complete sex, height, weight and goals. */
+export const profileCompleteGuard: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+  if (!authService.currentUser()) {
+    return router.createUrlTree(['/login']);
+  }
+  if (authService.needsOnboarding()) {
+    return router.createUrlTree(['/onboarding']);
+  }
+  return true;
+};
+
+export const skipOnboardingIfCompleteGuard: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+  if (!authService.currentUser()) {
+    return router.createUrlTree(['/login']);
+  }
+  if (!authService.needsOnboarding()) {
+    return router.createUrlTree(['/dashboard']);
+  }
+  return true;
+};

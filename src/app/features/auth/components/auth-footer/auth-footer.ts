@@ -1,19 +1,15 @@
 import { Component, computed, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { LanguageService } from '../../../../core/services/language.service';
 
 @Component({
   selector: 'app-auth-footer',
+  imports: [RouterLink],
   template: `
-    <footer class="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-ink-faint">
-      <a href="#" class="transition-colors duration-200 hover:text-primary" (click)="$event.preventDefault()">
-        {{ terms() }}
-      </a>
-      <a href="#" class="transition-colors duration-200 hover:text-primary" (click)="$event.preventDefault()">
-        {{ privacy() }}
-      </a>
-      <a href="#" class="transition-colors duration-200 hover:text-primary" (click)="$event.preventDefault()">
-        {{ help() }}
-      </a>
+    <footer class="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 px-1 text-xs text-ink-faint">
+      <a routerLink="/terms" class="transition-colors duration-200 hover:text-primary">{{ terms() }}</a>
+      <a routerLink="/privacy" class="transition-colors duration-200 hover:text-primary">{{ privacy() }}</a>
+      <a routerLink="/contact" class="transition-colors duration-200 hover:text-primary">{{ help() }}</a>
       <span class="w-full text-center sm:w-auto">{{ copyright() }}</span>
     </footer>
   `,

@@ -1,0 +1,142 @@
+<app-auth-shell>
+  <app-auth-page-shell [wide]="true">
+    <app-auth-heading [eyebrow]="eyebrow()" [title]="title()" [subtitle]="subtitle()" />
+
+    @if (errorBanner()) {
+      <p class="mt-4 rounded-panel border border-danger/30 bg-danger-light px-4 py-3 text-sm text-danger" role="alert">
+        {{ errorBanner() }}
+      </p>
+    }
+
+    <div class="mt-6" [attr.aria-label]="currentStepTitle()">
+      <div class="flex items-center justify-between gap-3" aria-live="polite">
+        <p class="text-sm font-semibold text-primary">{{ currentStepTitle() }}</p>
+        <p class="shrink-0 text-xs font-medium text-ink-faint">
+          {{ stepLabel() }} {{ displayedStep() }} {{ stepOf() }} {{ STEP_COUNT }}
+        </p>
+      </div>
+      <div
+        class="mt-2.5 flex gap-1.5"
+        role="progressbar"
+        aria-valuemin="1"
+        [attr.aria-valuemax]="STEP_COUNT"
+        [attr.aria-valuenow]="displayedStep()"
+      >
+        @for (index of STEP_INDEXES; track index) {
+          <span
+            class="h-1.5 flex-1 rounded-full transition-colors duration-300"
+            [class.bg-accent]="segmentActive(index)"
+            [class.bg-line]="!segmentActive(index)"
+          ></span>
+        }
+      </div>
+      <p class="mt-2 text-xs leading-relaxed text-ink-muted">
+        {{ currentStepSubtitle() }}
+      </p>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="onPrimary()" class="mt-6 space-y-5" novalidate>
+      @if (step() === 0) {
+        <div class="grid gap-5 sm:grid-cols-2">
+          <app-field [label]="genderLabel()" [id]="'onboarding-gender'" [error]="errorFor('gender')">
+            <select
+              appSelect
+              id="onboarding-gender"
+              formControlName="gender"
+              [appSelectInvalid]="form.controls.gender.touched && form.controls.gender.invalid"
+            >
+              <option value="" disabled>{{ genderLabel() }}</option>
+              @for (option of genderOptions(); track option.value) {
+                <option [value]="option.value">{{ option.label }}</option>
+              }
+            </select>
+          </app-field>
+          <app-field [label]="dobLabel()" [id]="'onboarding-dob'">
+            <input appInput id="onboarding-dob" type="date" formControlName="dateOfBirth" />
+          </app-field>
+          <app-field [label]="heightLabel()" [id]="'onboarding-height'" [error]="errorFor('heightCm')">
+            <input
+              appInput
+              id="onboarding-height"
+              type="number"
+              min="50"
+              max="250"
+              step="0.1"
+              formControlName="heightCm"
+              [appInputInvalid]="form.controls.heightCm.touched && form.controls.heightCm.invalid"
+            />
+          </app-field>
+          <app-field [label]="weightLabel()" [id]="'onboarding-weight'" [error]="errorFor('weightKg')">
+            <input
+              appInput
+              id="onboarding-weight"
+              type="number"
+              min="20"
+              max="400"
+              step="0.1"
+              formControlName="weightKg"
+              [appInputInvalid]="form.controls.weightKg.touched && form.controls.weightKg.invalid"
+            />
+          </app-field>
+          <app-field class="sm:col-span-2" [label]="occupationLabel()" [id]="'onboarding-occupation'">
+            <select appSelect id="onboarding-occupation" formControlName="occupationType">
+              <option value="">{{ occupationLabel() }}</option>
+              @for (option of occupationOptions(); track option.value) {
+                <option [value]="option.value">{{ option.label }}</option>
+              }
+            </select>
+          </app-field>
+        </div>
+      } @else {
+        <div class="grid gap-4">
+          <app-field [label]="sleepLabel()" [id]="'onboarding-sleep'" [hint]="sleepHint()">
+            <select appSelect id="onboarding-sleep" formControlName="sleepTarget">
+              @for (option of sleepOptions(); track option.value) {
+                <option [value]="option.value">{{ option.label }}</option>
+              }
+            </select>
+          </app-field>
+          <app-field [label]="waterLabel()" [id]="'onboarding-water'" [hint]="waterHint()">
+            <select appSelect id="onboarding-water" formControlName="waterTarget">
+              @for (option of waterOptions(); track option.value) {
+                <option [value]="option.value">{{ option.label }}</option>
+              }
+            </select>
+          </app-field>
+          <app-field [label]="activityLabel()" [id]="'onboarding-activity'" [hint]="activityHint()">
+            <select appSelect id="onboarding-activity" formControlName="activeMinutesTarget">
+              @for (option of activityOptions(); track option.value) {
+                <option [value]="option.value">{{ option.label }}</option>
+              }
+            </select>
+          </app-field>
+        </div>
+      }
+
+      <div class="flex items-center justify-between gap-3">
+        <button
+          appButton
+          variant="secondary"
+          type="button"
+          class="min-w-28"
+          [class.invisible]="step() === 0"
+          (click)="onBack()"
+          [disabled]="status() === 'loading'"
+        >
+          {{ backLabel() }}
+        </button>
+        <button
+          appButton
+          [variant]="step() === STEP_COUNT - 1 ? 'accent' : 'primary'"
+          type="submit"
+          class="min-w-40 flex-1 sm:flex-none"
+          size="lg"
+          [loading]="status() === 'loading'"
+          [disabled]="status() === 'loading'"
+        >
+          {{ primaryLabel() }}
+        </button>
+      </div>
+    </form>
+  </app-auth-page-shell>
+</app-auth-shell>

@@ -1,9 +1,10 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { LucideEye, LucideEyeOff, LucideInfo, LucideLock, LucideMail } from '@lucide/angular';
+import { LucideArrowLeft, LucideEye, LucideEyeOff, LucideInfo, LucideLock, LucideMail } from '@lucide/angular';
 import { AuthService } from '../../../core/services/auth/auth.service';
 import { LanguageService } from '../../../core/services/language.service';
+import { User } from '../../../core/models/user';
 import { Button } from '../../../shared/ui/button/button';
 import { Checkbox } from '../../../shared/ui/checkbox/checkbox';
 import { Field } from '../../../shared/ui/field/field';
@@ -11,6 +12,8 @@ import { InputDirective } from '../../../shared/directives/field-control/field-c
 import { AuthShell } from '../components/auth-shell/auth-shell';
 import { AuthPageShell } from '../components/auth-page-shell/auth-page-shell';
 import { AuthHeading } from '../components/auth-heading/auth-heading';
+import { AuthSocialButtons } from '../components/auth-social-buttons/auth-social-buttons';
+import { AuthSocialDivider } from '../components/auth-social-divider/auth-social-divider';
 
 type FormStatus = 'idle' | 'loading' | 'error';
 
@@ -28,6 +31,9 @@ type FormStatus = 'idle' | 'loading' | 'error';
     AuthShell,
     AuthPageShell,
     AuthHeading,
+    AuthSocialButtons,
+    AuthSocialDivider,
+    LucideArrowLeft,
     LucideEye,
     LucideEyeOff,
     LucideInfo,
@@ -44,7 +50,9 @@ export class LoginComponent {
   private readonly trSignal = (key: string) => this.languageService.translateSignal(key);
   private readonly tr = <T = string>(key: string): T => this.languageService.translate<T>(key);
 
-  // Translation signals
+  protected readonly STEP_COUNT = 2;
+  protected readonly STEP_INDEXES = [0, 1];
+
   protected readonly eyebrow = this.trSignal('auth.login.eyebrow');
   protected readonly title = this.trSignal('auth.login.title');
   protected readonly subtitle = this.trSignal('auth.login.subtitle');
@@ -57,12 +65,15 @@ export class LoginComponent {
   protected readonly rememberMeText = this.trSignal('auth.login.rememberMe');
   protected readonly forgotPassword = this.trSignal('auth.login.forgotPassword');
   protected readonly submit = this.trSignal('auth.login.submit');
-  protected readonly orContinueWith = this.trSignal('auth.login.orContinueWith');
+  protected readonly continueLabel = this.trSignal('auth.login.continue');
+  protected readonly backLabel = this.trSignal('auth.register.nav.back');
+  protected readonly stepLabel = this.trSignal('auth.register.steps.label');
+  protected readonly stepOf = this.trSignal('auth.register.steps.of');
   protected readonly noAccount = this.trSignal('auth.login.noAccount');
   protected readonly createAccount = this.trSignal('auth.login.createAccount');
   protected readonly errorMessage = this.trSignal('auth.login.error');
+  protected readonly socialLabel = this.trSignal('auth.social.label');
 
-  // Form and state
   protected readonly form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(6)]],
@@ -71,10 +82,25 @@ export class LoginComponent {
   protected readonly rememberMe = signal(false);
   protected readonly showPassword = signal(false);
   protected readonly status = signal<FormStatus>('idle');
+  protected readonly googleError = signal<string | null>(null);
+  protected readonly step = signal(0);
+  protected readonly direction = signal<'forward' | 'back'>('forward');
 
-  /**
-   * Get validation error message for a form control
-   */
+  protected readonly displayedStep = computed(() => this.step() + 1);
+  protected readonly currentStepTitle = computed(() =>
+    this.tr(this.step() === 0 ? 'auth.login.steps.email.title' : 'auth.login.steps.password.title'),
+  );
+  protected readonly currentStepSubtitle = computed(() =>
+    this.tr(this.step() === 0 ? 'auth.login.steps.email.subtitle' : 'auth.login.steps.password.subtitle'),
+  );
+  protected readonly primaryLabel = computed(() =>
+    this.step() === 0 ? this.continueLabel() : this.submit(),
+  );
+
+  protected segmentActive(index: number): boolean {
+    return index < this.displayedStep();
+  }
+
   protected errorFor(control: keyof typeof this.form.controls): string | null {
     const field = this.form.controls[control];
     if (!field.touched || !field.invalid) {
@@ -92,52 +118,70 @@ export class LoginComponent {
     return this.tr('auth.errors.invalid');
   }
 
-  /**
-   * Toggle password visibility
-   */
   protected togglePasswordVisibility(): void {
     this.showPassword.set(!this.showPassword());
   }
 
-  /**
-   * Handle form submission
-   */
+  protected onBack(): void {
+    if (this.step() > 0) {
+      this.direction.set('back');
+      this.step.set(0);
+    }
+  }
+
   protected onSubmit(): void {
-    // Mark all fields as touched to show validation errors
+    if (this.step() === 0) {
+      this.form.controls.email.markAsTouched();
+      this.form.controls.email.updateValueAndValidity();
+      if (this.form.controls.email.invalid) {
+        return;
+      }
+      this.direction.set('forward');
+      this.step.set(1);
+      return;
+    }
+
+    this.form.controls.password.markAsTouched();
+    this.form.controls.password.updateValueAndValidity();
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
 
-    // Set loading state
     this.status.set('loading');
-
+    this.googleError.set(null);
     const { email, password } = this.form.getRawValue();
+    this.authService.login({ email, password, rememberMe: this.rememberMe() }).subscribe({
+      next: (user) => {
+        this.authService.setCurrentUser(user);
+        this.status.set('idle');
+        void this.router.navigate([this.authService.afterAuthPath()]);
+      },
+      error: (error) => {
+        this.status.set('error');
+        console.error('Login failed:', error);
+        this.form.controls.password.reset();
+      },
+    });
+  }
 
-    // Call authentication service
-    this.authService
-      .login({ email, password, rememberMe: this.rememberMe() })
-      .subscribe({
-        next: (user) => {
-          // Set current user
-          this.authService.setCurrentUser(user);
-          
-          // Reset form state
-          this.status.set('idle');
-          
-          // Navigate to dashboard
-          void this.router.navigate(['/dashboard']);
-        },
-        error: (error) => {
-          // Set error state
-          this.status.set('error');
-          
-          // Log error for debugging
-          console.error('Login failed:', error);
-          
-          // Reset form password for security
-          this.form.controls.password.reset();
-        },
-      });
+  protected bannerMessage(): string {
+    const code = this.googleError();
+    if (code) {
+      return this.tr(`auth.social.errors.${code}`);
+    }
+    return this.errorMessage();
+  }
+
+  protected onGoogleSignedIn(user: User): void {
+    this.googleError.set(null);
+    this.authService.setCurrentUser(user);
+    this.status.set('idle');
+    void this.router.navigate([this.authService.afterAuthPath()]);
+  }
+
+  protected onGoogleFailed(code: string): void {
+    this.googleError.set(code);
+    this.status.set('error');
   }
 }

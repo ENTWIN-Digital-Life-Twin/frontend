@@ -13,7 +13,15 @@ const API_URLS = [
   environment.notificationApiUrl,
   environment.aiApiUrl,
 ];
-const PUBLIC_PATHS = ['/auth/login', '/auth/register', '/auth/refresh'];
+const PUBLIC_PATHS = [
+  '/auth/login',
+  '/auth/register',
+  '/auth/google',
+  '/auth/refresh',
+  '/auth/forgot-password',
+  '/auth/reset-password',
+  '/auth/contact',
+];
 
 function isApiRequest(url: string): boolean {
   if (url.startsWith('/api')) {

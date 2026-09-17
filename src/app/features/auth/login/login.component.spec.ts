@@ -6,6 +6,7 @@ import { of, throwError } from 'rxjs';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { LoginComponent } from './login.component';
 import { AuthService } from '../../../core/services/auth/auth.service';
+import { GoogleIdentityService } from '../../../core/services/auth/google-identity.service';
 import { LanguageService } from '../../../core/services/language.service';
 
 describe('LoginComponent', () => {
@@ -13,22 +14,14 @@ describe('LoginComponent', () => {
   let fixture: ComponentFixture<LoginComponent>;
   let mockAuthService: any;
   let mockRouter: Router;
-  let mockLanguageService: any;
 
   beforeEach(async () => {
-    // Create mock services
     mockAuthService = {
       login: vi.fn(),
       setCurrentUser: vi.fn(),
-    };
-    mockLanguageService = {
-      translate: vi.fn((key: string) =>
-        key === 'auth.brand.stories' || key === 'auth.brand.stats' ? [] : 'Translated',
-      ),
-      translateSignal: vi.fn().mockReturnValue(() => 'Translated'),
-      activeLanguage: vi.fn().mockReturnValue('en'),
-      languageOptions: [],
-      setLanguage: vi.fn(),
+      loginWithGoogle: vi.fn(),
+      afterAuthPath: vi.fn().mockReturnValue('/dashboard'),
+      needsOnboarding: vi.fn().mockReturnValue(false),
     };
 
     await TestBed.configureTestingModule({
@@ -45,7 +38,22 @@ describe('LoginComponent', () => {
           },
         },
         { provide: AuthService, useValue: mockAuthService },
-        { provide: LanguageService, useValue: mockLanguageService },
+        {
+          provide: GoogleIdentityService,
+          useValue: { requestIdToken: vi.fn() },
+        },
+        {
+          provide: LanguageService,
+          useValue: {
+            translate: vi.fn((key: string) =>
+              key === 'auth.brand.stories' || key === 'auth.brand.stats' ? [] : 'Translated',
+            ),
+            translateSignal: vi.fn().mockReturnValue(() => 'Translated'),
+            activeLanguage: vi.fn().mockReturnValue('en'),
+            languageOptions: [],
+            setLanguage: vi.fn(),
+          },
+        },
       ],
     }).compileComponents();
 
@@ -55,6 +63,11 @@ describe('LoginComponent', () => {
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
+
+  function goToPasswordStep(): void {
+    component['form'].controls.email.setValue('test@example.com');
+    component['onSubmit']();
+  }
 
   it('should create', () => {
     expect(component).toBeTruthy();
@@ -67,47 +80,74 @@ describe('LoginComponent', () => {
     });
   });
 
+  it('should start on the email step', () => {
+    expect(component['step']()).toBe(0);
+  });
+
   it('should validate email format', () => {
     const emailControl = component['form'].controls.email;
-    
+
     emailControl.setValue('invalid-email');
     expect(emailControl.hasError('email')).toBe(true);
-    
+
     emailControl.setValue('valid@email.com');
     expect(emailControl.hasError('email')).toBe(false);
   });
 
   it('should validate password minimum length', () => {
     const passwordControl = component['form'].controls.password;
-    
+
     passwordControl.setValue('12345');
     expect(passwordControl.hasError('minlength')).toBe(true);
-    
+
     passwordControl.setValue('123456');
     expect(passwordControl.hasError('minlength')).toBe(false);
   });
 
-  it('should not submit form if invalid', () => {
+  it('should not leave the email step when the email is invalid', () => {
     component['form'].controls.email.setValue('');
-    component['form'].controls.password.setValue('');
-    
+
     component['onSubmit']();
-    
+
     expect(mockAuthService.login).not.toHaveBeenCalled();
+    expect(component['step']()).toBe(0);
     expect(component['form'].controls.email.touched).toBe(true);
-    expect(component['form'].controls.password.touched).toBe(true);
   });
 
-  it('should submit form with valid data', () => {
-    const mockUser = { id: '1', email: 'test@example.com', firstName: 'Test', lastName: 'User', role: 'user' as const, avatarUrl: null };
+  it('should advance to the password step without logging in', () => {
+    goToPasswordStep();
+
+    expect(component['step']()).toBe(1);
+    expect(mockAuthService.login).not.toHaveBeenCalled();
+  });
+
+  it('should not submit from the password step if the password is invalid', () => {
+    goToPasswordStep();
+    component['form'].controls.password.setValue('');
+
+    component['onSubmit']();
+
+    expect(mockAuthService.login).not.toHaveBeenCalled();
+    expect(component['form'].controls.password.touched).toBe(true);
+    expect(component['step']()).toBe(1);
+  });
+
+  it('should submit form with valid data on the password step', () => {
+    const mockUser = {
+      id: '1',
+      email: 'test@example.com',
+      firstName: 'Test',
+      lastName: 'User',
+      role: 'user' as const,
+      avatarUrl: null,
+    };
     mockAuthService.login.mockReturnValue(of(mockUser));
-    
-    component['form'].controls.email.setValue('test@example.com');
+    goToPasswordStep();
     component['form'].controls.password.setValue('password123');
     component['rememberMe'].set(true);
-    
+
     component['onSubmit']();
-    
+
     expect(mockAuthService.login).toHaveBeenCalledWith({
       email: 'test@example.com',
       password: 'password123',
@@ -116,14 +156,20 @@ describe('LoginComponent', () => {
   });
 
   it('should navigate to dashboard on successful login', () => {
-    const mockUser = { id: '1', email: 'test@example.com', firstName: 'Test', lastName: 'User', role: 'user' as const, avatarUrl: null };
+    const mockUser = {
+      id: '1',
+      email: 'test@example.com',
+      firstName: 'Test',
+      lastName: 'User',
+      role: 'user' as const,
+      avatarUrl: null,
+    };
     mockAuthService.login.mockReturnValue(of(mockUser));
-    
-    component['form'].controls.email.setValue('test@example.com');
+    goToPasswordStep();
     component['form'].controls.password.setValue('password123');
-    
+
     component['onSubmit']();
-    
+
     expect(mockAuthService.setCurrentUser).toHaveBeenCalledWith(mockUser);
     expect(mockRouter.navigate).toHaveBeenCalledWith(['/dashboard']);
     expect(component['status']()).toBe('idle');
@@ -131,49 +177,97 @@ describe('LoginComponent', () => {
 
   it('should set error status on login failure', () => {
     mockAuthService.login.mockReturnValue(throwError(() => new Error('Login failed')));
-    
-    component['form'].controls.email.setValue('test@example.com');
+    goToPasswordStep();
     component['form'].controls.password.setValue('wrongpassword');
-    
+
     component['onSubmit']();
-    
+
     expect(component['status']()).toBe('error');
     expect(mockRouter.navigate).not.toHaveBeenCalled();
   });
 
+  it('should go back from the password step to the email step', () => {
+    goToPasswordStep();
+
+    component['onBack']();
+
+    expect(component['step']()).toBe(0);
+    expect(component['direction']()).toBe('back');
+  });
+
   it('should toggle password visibility', () => {
     expect(component['showPassword']()).toBe(false);
-    
+
     component['togglePasswordVisibility']();
     expect(component['showPassword']()).toBe(true);
-    
+
     component['togglePasswordVisibility']();
     expect(component['showPassword']()).toBe(false);
   });
 
   it('should return correct error messages', () => {
     const emailControl = component['form'].controls.email;
-    
+
     emailControl.setValue('');
     emailControl.markAsTouched();
     expect(component['errorFor']('email')).toBe('Translated');
-    
+
     emailControl.setValue('invalid');
     expect(component['errorFor']('email')).toBe('Translated');
   });
 
   it('should set loading status during login', () => {
-    mockAuthService.login.mockReturnValue(of({ id: '1', email: 'test@example.com', firstName: 'Test', lastName: 'User', role: 'user' as const, avatarUrl: null }));
-    
-    component['form'].controls.email.setValue('test@example.com');
+    mockAuthService.login.mockReturnValue(
+      of({
+        id: '1',
+        email: 'test@example.com',
+        firstName: 'Test',
+        lastName: 'User',
+        role: 'user' as const,
+        avatarUrl: null,
+      }),
+    );
+    goToPasswordStep();
     component['form'].controls.password.setValue('password123');
-    
+
     expect(component['status']()).toBe('idle');
-    
+
     component['onSubmit']();
-    
-    // Status should be set to loading before the observable completes
-    // After completion, it should be idle
+
     expect(component['status']()).toBe('idle');
+  });
+
+  it('should navigate to onboarding after Google sign-in when profile is incomplete', () => {
+    mockAuthService.afterAuthPath.mockReturnValue('/onboarding');
+    const mockUser = {
+      id: '1',
+      email: 'google@example.com',
+      firstName: 'Ada',
+      lastName: 'Lovelace',
+      role: 'user' as const,
+      avatarUrl: null,
+    };
+
+    component['onGoogleSignedIn'](mockUser);
+
+    expect(mockAuthService.setCurrentUser).toHaveBeenCalledWith(mockUser);
+    expect(mockRouter.navigate).toHaveBeenCalledWith(['/onboarding']);
+    expect(component['status']()).toBe('idle');
+  });
+
+  it('should show an error when Google authentication fails', () => {
+    component['onGoogleFailed']('google_popup_closed');
+
+    expect(component['status']()).toBe('error');
+    expect(component['googleError']()).toBe('google_popup_closed');
+    expect(mockRouter.navigate).not.toHaveBeenCalled();
+  });
+
+  it('should show an error when Google backend login fails', () => {
+    component['onGoogleFailed']('account_linking_required');
+
+    expect(component['status']()).toBe('error');
+    expect(component['googleError']()).toBe('account_linking_required');
+    expect(mockRouter.navigate).not.toHaveBeenCalled();
   });
 });

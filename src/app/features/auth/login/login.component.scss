@@ -1,222 +1,40 @@
-// Login Component Styles
-
 :host {
   display: block;
 }
 
-// Form container with better spacing
-form {
-  animation: fadeIn 0.3s ease-in-out;
+.step-forward {
+  animation: slideInRight 0.3s ease-out;
 }
 
-// Form fields spacing
-app-field {
-  display: block;
-  margin-bottom: 1.5rem;
+.step-back {
+  animation: slideInLeft 0.3s ease-out;
 }
 
-// Error alert with spacing
-[role="alert"] {
-  animation: slideDown 0.3s ease-out;
-  margin-bottom: 1.5rem;
-}
-
-// Remember me and forgot password row
-.flex.items-center.justify-between {
-  margin-top: 0.5rem;
-  margin-bottom: 1.5rem;
-}
-
-// Submit button spacing
-button[type="submit"] {
-  margin-top: 2rem;
-}
-
-// Divider spacing
-.mt-7 {
-  margin-top: 2rem;
-}
-
-// Social buttons spacing
-.grid {
-  margin-top: 1.5rem;
-  gap: 1rem;
-}
-
-// Footer text spacing
-p.mt-7 {
-  margin-top: 2rem;
-}
-
-// Animations
-@keyframes fadeIn {
+@keyframes slideInRight {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateX(12px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateX(0);
   }
 }
 
-@keyframes slideDown {
+@keyframes slideInLeft {
   from {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateX(-12px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateX(0);
   }
 }
 
-// Input focus states
-input:focus {
-  outline: none;
-}
-
-// Button states
-button[disabled] {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-// Social button hover effects
-.grid button {
-  transition: all 0.2s ease-in-out;
-  padding: 0.75rem 1rem;
-  
-  &:hover:not([disabled]) {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  }
-  
-  &:active:not([disabled]) {
-    transform: translateY(0);
-  }
-  
-  svg {
-    flex-shrink: 0;
-  }
-  
-  span {
-    margin-left: 0.5rem;
-  }
-}
-
-// Link hover effects
-a {
-  position: relative;
-  display: inline-block;
-  
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: -2px;
-    left: 0;
-    width: 0;
-    height: 2px;
-    background-color: currentColor;
-    transition: width 0.3s ease-in-out;
-  }
-  
-  &:hover::after {
-    width: 100%;
-  }
-}
-
-// Checkbox spacing
-app-checkbox {
-  display: inline-flex;
-  align-items: center;
-}
-
-// Input field spacing
-.relative {
-  position: relative;
-  
-  input {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    padding-left: 2.5rem;
-    
-    &.pr-11 {
-      padding-right: 2.75rem;
-    }
-  }
-  
-  svg {
-    pointer-events: none;
-  }
-  
-  button {
-    padding: 0.5rem;
-  }
-}
-
-// Responsive adjustments
-@media (max-width: 640px) {
-  .grid {
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
-  }
-  
-  app-field {
-    margin-bottom: 1.25rem;
-  }
-  
-  button[type="submit"] {
-    margin-top: 1.5rem;
-  }
-}
-
-// Accessibility: Reduce motion
 @media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
-// Focus visible states for keyboard navigation
-button:focus-visible,
-a:focus-visible,
-input:focus-visible {
-  outline: 2px solid var(--color-accent, #2A9D9D);
-  outline-offset: 2px;
-  border-radius: 4px;
-}
-
-// Error state styling
-[appInputInvalid] {
-  border-color: var(--color-danger, #dc2626);
-}
-
-// Loading state
-button[loading] {
-  position: relative;
-  color: transparent;
-  
-  &::after {
-    content: '';
-    position: absolute;
-    width: 16px;
-    height: 16px;
-    top: 50%;
-    left: 50%;
-    margin-left: -8px;
-    margin-top: -8px;
-    border: 2px solid currentColor;
-    border-radius: 50%;
-    border-top-color: transparent;
-    animation: spin 0.6s linear infinite;
-  }
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
+  .step-forward,
+  .step-back {
+    animation: none;
   }
 }
