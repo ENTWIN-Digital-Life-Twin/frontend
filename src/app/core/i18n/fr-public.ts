@@ -116,6 +116,7 @@ export const FR_PUBLIC = {
       primary: 'Navigation principale',
       mobile: 'Navigation mobile',
     },
+    weekdaysShort: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
     footer: {
       description:
         'Digital Life Twin centralise votre planning, vos habitudes et votre bien-être pour vous aider à mieux organiser chaque journée.',
@@ -125,8 +126,48 @@ export const FR_PUBLIC = {
       createAccount: 'Créer un compte',
       home: 'Accueil',
       copyright: '© {{year}} Digital Life Twin. Tous droits réservés.',
+      terms: 'Conditions d’utilisation',
+      privacy: 'Politique de confidentialité',
       disclaimer:
         'Indicateurs de bien-être — ne remplace pas un avis médical professionnel.',
+    },
+    legal: {
+      badge: 'Mentions légales',
+      terms: {
+        title: 'Conditions d’utilisation',
+        updated: 'Dernière mise à jour : 26 septembre 2026',
+        intro:
+          'Ces conditions encadrent l’usage de Digital Life Twin (ENTWIN). Créer un compte vaut acceptation.',
+        sections: [
+          {
+            heading: 'Objet du service',
+            body: 'ENTWIN aide à organiser planning, habitudes et bien-être. Ce n’est pas un dispositif médical.',
+          },
+          {
+            heading: 'Votre compte',
+            body: 'Vous êtes responsable de vos informations et de votre mot de passe. Vous pouvez le changer dans Paramètres → Sécurité.',
+          },
+          {
+            heading: 'Contact',
+            body: 'Les questions se posent depuis la page Contact.',
+          },
+        ],
+      },
+      privacy: {
+        title: 'Politique de confidentialité',
+        updated: 'Dernière mise à jour : 26 septembre 2026',
+        intro: 'Cette politique décrit les données conservées pour votre compte et le suivi bien-être.',
+        sections: [
+          {
+            heading: 'Données conservées',
+            body: 'Profil, journaux de planning et de bien-être, et données de sécurité (mot de passe chiffré, codes de vérification).',
+          },
+          {
+            heading: 'Vos choix',
+            body: 'Vous pouvez mettre à jour votre profil, changer de mot de passe, ou nous contacter pour une suppression.',
+          },
+        ],
+      },
     },
     home: {
       hero: {
@@ -535,8 +576,17 @@ export const FR_PUBLIC = {
     social: {
       label: 'ou continuer avec',
       google: 'Google',
-      apple: 'Apple',
-      notice: 'La connexion sociale sera disponible dans une prochaine version.',
+      errors: {
+        google_popup_closed: 'La connexion Google a été annulée.',
+        google_auth_failed: 'La connexion Google a échoué. Réessayez.',
+        invalid_google_token: 'Google n’a pas pu être vérifié. Réessayez.',
+        account_linking_required:
+          'Un compte existe déjà pour cet e-mail. Connectez-vous avec votre mot de passe.',
+        google_not_configured: 'La connexion Google n’est pas configurée.',
+        google_login_failed: 'La connexion Google a échoué. Réessayez.',
+        google_script_failed: 'Impossible de charger Google. Vérifiez votre connexion.',
+        google_email_unverified: 'Google n’a pas fourni d’e-mail vérifié.',
+      },
     },
     footer: {
       terms: 'Conditions d\'utilisation',
@@ -562,9 +612,36 @@ export const FR_PUBLIC = {
       forgotHint:
         'La réinitialisation de mot de passe sera disponible dans une prochaine version.',
       submit: 'Se connecter',
+      continue: 'Continuer',
+      steps: {
+        email: { title: 'Votre e-mail', subtitle: 'Nous demanderons ensuite votre mot de passe.' },
+        password: { title: 'Votre mot de passe', subtitle: 'Accédez à votre espace.' },
+      },
       noAccount: 'Pas encore de compte ?',
       createAccount: 'Créer un compte',
       error: 'E-mail ou mot de passe incorrect. Vérifiez vos identifiants et réessayez.',
+    },
+    forgot: {
+      eyebrow: 'Compte',
+      title: 'Mot de passe oublié ?',
+      subtitle: 'Saisissez votre e-mail. Si un compte existe, vous pourrez réinitialiser le mot de passe.',
+      submit: 'Envoyer le lien',
+      success: 'Si un compte existe pour cet e-mail, un lien de réinitialisation a été envoyé. Consultez votre boîte de réception.',
+      continue: 'Choisir un nouveau mot de passe',
+      back: 'Retour à la connexion',
+      error: 'Impossible de démarrer la réinitialisation. Réessayez.',
+    },
+    reset: {
+      eyebrow: 'Compte',
+      title: 'Nouveau mot de passe',
+      subtitle: 'Choisissez un mot de passe d’au moins 8 caractères.',
+      passwordLabel: 'Nouveau mot de passe',
+      passwordPlaceholder: 'Nouveau mot de passe',
+      confirmLabel: 'Confirmer le mot de passe',
+      missingToken: 'Ce lien de réinitialisation est incomplet. Demandez-en un nouveau depuis la page mot de passe oublié.',
+      submit: 'Mettre à jour',
+      success: 'Mot de passe mis à jour. Vous pouvez vous connecter.',
+      error: 'Ce lien de réinitialisation est invalide ou a expiré.',
     },
     register: {
       eyebrow: 'Nouveau compte',
@@ -574,8 +651,19 @@ export const FR_PUBLIC = {
         label: 'Étape',
         of: 'sur',
         identity: { title: 'Identité', subtitle: 'Comment vous appelez-vous ?' },
-        account: { title: 'Compte', subtitle: 'Votre adresse e-mail' },
+        account: {
+          title: 'Votre compte',
+          subtitle: 'Nom, e-mail et mot de passe.',
+        },
+        verify: {
+          title: 'Vérifiez votre e-mail',
+          subtitle: 'Saisissez le code à 6 chiffres envoyé par e-mail.',
+        },
         security: { title: 'Sécurité', subtitle: 'Choisissez un mot de passe solide' },
+        profile: {
+          title: 'À propos de vous',
+          subtitle: 'Le sexe, la taille et le poids aident à personnaliser vos indicateurs bien-être.',
+        },
         terms: {
           title: 'Conditions',
           subtitle: 'Lisez et acceptez nos conditions d\'utilisation',
@@ -583,6 +671,10 @@ export const FR_PUBLIC = {
         personalization: {
           title: 'Personnalisation',
           subtitle: 'Adaptez l\'application à vos objectifs',
+        },
+        goals: {
+          title: 'Vos objectifs',
+          subtitle: 'Sommeil, hydratation, activité — et acceptez les conditions.',
         },
       },
       confirm: {
@@ -602,6 +694,27 @@ export const FR_PUBLIC = {
         water: 'Objectif d\'hydratation',
         activity: 'Objectif d\'activité',
         dailySummary: 'Résumé quotidien',
+        gender: 'Sexe',
+        height: 'Taille',
+        weight: 'Poids',
+      },
+      profile: {
+        gender: 'Sexe',
+        dateOfBirth: 'Date de naissance',
+        height: 'Taille (cm)',
+        weight: 'Poids (kg)',
+        occupation: 'Occupation',
+        range: 'Saisissez une valeur réaliste.',
+        genderOptions: [
+          { value: 'FEMALE', label: 'Femme' },
+          { value: 'MALE', label: 'Homme' },
+        ],
+        occupationOptions: [
+          { value: 'STUDENT', label: 'Étudiant' },
+          { value: 'EMPLOYEE', label: 'Salarié' },
+          { value: 'BOTH', label: 'Étudiant et salarié' },
+          { value: 'OTHER', label: 'Autre' },
+        ],
       },
       personalization: {
         sleepLabel: 'Objectif de sommeil',
@@ -638,6 +751,14 @@ export const FR_PUBLIC = {
       emailPlaceholder: 'vous@exemple.fr',
       passwordLabel: 'Mot de passe',
       confirmLabel: 'Confirmer le mot de passe',
+      codeLabel: 'Code de vérification',
+      codePlaceholder: '000000',
+      codeHint: 'Consultez votre boîte mail pour un code à 6 chiffres. Il expire dans 10 minutes.',
+      resend: 'Renvoyer le code',
+      emailTaken: 'Un compte existe déjà pour cet e-mail.',
+      codeInvalid: 'Ce code de vérification est invalide ou expiré.',
+      mailFailed: 'Impossible d’envoyer l’e-mail de vérification. Réessayez dans un instant.',
+      error: 'Impossible de créer le compte. Réessayez.',
       termsAria: 'J\'accepte les conditions d\'utilisation',
       termsPrefix: 'J\'accepte les',
       termsLink: 'conditions d\'utilisation',
@@ -650,6 +771,14 @@ export const FR_PUBLIC = {
       successTitle: 'Compte créé !',
       successText: 'Bienvenue dans Digital Life Twin, {{name}}. Votre espace est prêt.',
       goDashboard: 'Accéder au tableau de bord',
+    },
+    onboarding: {
+      eyebrow: 'Bienvenue',
+      title: 'Complétez votre profil',
+      subtitle:
+        'Google ne partage que votre nom et votre e-mail. Ajoutez le sexe, la taille, le poids et vos objectifs bien-être pour personnaliser ENTWIN.',
+      submit: 'Enregistrer et continuer',
+      error: 'Impossible d’enregistrer le profil. Réessayez.',
     },
   },
 };

@@ -1,6 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { delay, of } from 'rxjs';
 import {
   LucideCheck,
   LucideClock,
@@ -18,6 +17,7 @@ import {
 } from '../../../../shared/directives/field-control/field-control';
 import { Reveal } from '../../../../shared/directives/reveal/reveal';
 import { LanguageService } from '../../../../core/services/language.service';
+import { AuthService } from '../../../../core/services/auth/auth.service';
 
 type FormStatus = 'idle' | 'loading' | 'success';
 
@@ -209,6 +209,7 @@ type FormStatus = 'idle' | 'loading' | 'success';
 export class ContactComponent {
   private readonly fb = inject(FormBuilder);
   private readonly languageService = inject(LanguageService);
+  private readonly authService = inject(AuthService);
 
   private readonly tr = <T = string>(key: string): T => this.languageService.translate<T>(key);
   private readonly trSignal = (key: string) => this.languageService.translateSignal(key);
@@ -237,7 +238,10 @@ export class ContactComponent {
   protected readonly messageLabel = this.trSignal('public.contact.messageLabel');
   protected readonly messagePlaceholder = this.trSignal('public.contact.messagePlaceholder');
   protected readonly submit = this.trSignal('public.contact.submit');
-  protected readonly subjects = computed(() => this.tr<string[]>('public.contact.subjects'));
+  protected readonly subjects = computed(() => {
+    const value = this.tr<string[]>('public.contact.subjects');
+    return Array.isArray(value) ? value : [];
+  });
 
   protected readonly successTitle = this.trSignal('public.contact.successTitle');
   protected readonly successText = this.trSignal('public.contact.successText');
@@ -275,11 +279,10 @@ export class ContactComponent {
       return;
     }
     this.status.set('loading');
-    of(null)
-      .pipe(delay(1100))
-      .subscribe(() => {
-        this.status.set('success');
-      });
+    this.authService.submitContact(this.form.getRawValue()).subscribe({
+      next: () => this.status.set('success'),
+      error: () => this.status.set('idle'),
+    });
   }
 
   protected resetForm(): void {

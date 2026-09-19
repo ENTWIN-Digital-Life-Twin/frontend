@@ -237,7 +237,10 @@ export class AboutComponent {
   protected readonly dataTitle = this.trSignal('public.about.data.title');
   protected readonly dataDescription = this.trSignal('public.about.data.description');
   protected readonly dataCardTitle = this.trSignal('public.about.data.cardTitle');
-  protected readonly dataPoints = computed(() => this.tr<string[]>('public.about.data.points'));
+  protected readonly dataPoints = computed(() => {
+    const value = this.tr<string[]>('public.about.data.points');
+    return Array.isArray(value) ? value : [];
+  });
   protected readonly dataNote = this.trSignal('public.about.data.note');
 
   protected readonly ctaTitle = this.trSignal('public.about.cta.title');

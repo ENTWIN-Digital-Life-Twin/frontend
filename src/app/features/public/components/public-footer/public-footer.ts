@@ -80,6 +80,8 @@ export class PublicFooter {
     { labelKey: 'public.nav.features', path: '/features' },
     { labelKey: 'public.nav.about', path: '/about' },
     { labelKey: 'public.nav.contact', path: '/contact' },
+    { labelKey: 'public.footer.terms', path: '/terms' },
+    { labelKey: 'public.footer.privacy', path: '/privacy' },
   ]);
 
   protected readonly startLinks = this.languageService.translateArray([

@@ -152,22 +152,27 @@ const WEEKLY_BARS = [45, 68, 58, 82, 64, 90, 74];
               <p class="mt-5 font-display text-lg font-semibold tracking-tight text-primary">
                 {{ feature.title }}
               </p>
-              <div class="mt-5 flex h-28 items-end gap-2">
+              <div class="mt-5 flex items-end gap-2">
                 @for (height of weeklyBars; track $index) {
-                  <div
-                    class="flex-1 rounded-t-md bg-gradient-to-t from-primary/15 to-accent/70"
-                    [style.height.%]="height"
-                  ></div>
-                }
-              </div>
-              <div class="mt-5 space-y-2.5">
-                @for (point of feature.points; track point) {
-                  <div class="flex items-center gap-2.5">
-                    <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-accent"></span>
-                    <span class="h-2 flex-1 rounded-full bg-surface-strong"></span>
+                  <div class="flex min-w-0 flex-1 flex-col items-center gap-1.5">
+                    <div class="flex h-24 w-full items-end">
+                      <div
+                        class="w-full rounded-t-md bg-gradient-to-t from-primary/15 to-accent/70"
+                        [style.height.%]="height"
+                      ></div>
+                    </div>
+                    <span class="text-[10px] font-medium text-ink-faint">{{ weekdays()[$index] }}</span>
                   </div>
                 }
               </div>
+              <ul class="mt-5 space-y-2.5">
+                @for (point of feature.points; track point) {
+                  <li class="flex items-start gap-2.5 text-sm leading-relaxed text-ink">
+                    <span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent"></span>
+                    <span>{{ point }}</span>
+                  </li>
+                }
+              </ul>
             </div>
           </div>
         </article>
@@ -224,6 +229,13 @@ export class FeaturesComponent {
   protected readonly navAria = this.trSignal('public.features.navAria');
   protected readonly preview = this.trSignal('public.features.preview');
 
+  private list(key: string): string[] {
+    const value = this.tr<string[]>(key);
+    return Array.isArray(value) ? value : [];
+  }
+
+  protected readonly weekdays = computed(() => this.list('public.weekdaysShort'));
+
   protected readonly features = computed<Feature[]>(() => [
     {
       id: 'planning',
@@ -231,7 +243,7 @@ export class FeaturesComponent {
       eyebrow: this.tr('public.features.items.planning.eyebrow'),
       title: this.tr('public.features.items.planning.title'),
       description: this.tr('public.features.items.planning.description'),
-      points: this.tr<string[]>('public.features.items.planning.points'),
+      points: this.list('public.features.items.planning.points'),
     },
     {
       id: 'dashboard',
@@ -239,7 +251,7 @@ export class FeaturesComponent {
       eyebrow: this.tr('public.features.items.dashboard.eyebrow'),
       title: this.tr('public.features.items.dashboard.title'),
       description: this.tr('public.features.items.dashboard.description'),
-      points: this.tr<string[]>('public.features.items.dashboard.points'),
+      points: this.list('public.features.items.dashboard.points'),
     },
     {
       id: 'wellness',
@@ -247,7 +259,7 @@ export class FeaturesComponent {
       eyebrow: this.tr('public.features.items.wellness.eyebrow'),
       title: this.tr('public.features.items.wellness.title'),
       description: this.tr('public.features.items.wellness.description'),
-      points: this.tr<string[]>('public.features.items.wellness.points'),
+      points: this.list('public.features.items.wellness.points'),
     },
     {
       id: 'nutrition',
@@ -255,7 +267,7 @@ export class FeaturesComponent {
       eyebrow: this.tr('public.features.items.nutrition.eyebrow'),
       title: this.tr('public.features.items.nutrition.title'),
       description: this.tr('public.features.items.nutrition.description'),
-      points: this.tr<string[]>('public.features.items.nutrition.points'),
+      points: this.list('public.features.items.nutrition.points'),
     },
     {
       id: 'sport',
@@ -263,7 +275,7 @@ export class FeaturesComponent {
       eyebrow: this.tr('public.features.items.sport.eyebrow'),
       title: this.tr('public.features.items.sport.title'),
       description: this.tr('public.features.items.sport.description'),
-      points: this.tr<string[]>('public.features.items.sport.points'),
+      points: this.list('public.features.items.sport.points'),
     },
     {
       id: 'notifications',
@@ -271,7 +283,7 @@ export class FeaturesComponent {
       eyebrow: this.tr('public.features.items.notifications.eyebrow'),
       title: this.tr('public.features.items.notifications.title'),
       description: this.tr('public.features.items.notifications.description'),
-      points: this.tr<string[]>('public.features.items.notifications.points'),
+      points: this.list('public.features.items.notifications.points'),
     },
     {
       id: 'ia',
@@ -279,7 +291,7 @@ export class FeaturesComponent {
       eyebrow: this.tr('public.features.items.ai.eyebrow'),
       title: this.tr('public.features.items.ai.title'),
       description: this.tr('public.features.items.ai.description'),
-      points: this.tr<string[]>('public.features.items.ai.points'),
+      points: this.list('public.features.items.ai.points'),
     },
   ]);
 

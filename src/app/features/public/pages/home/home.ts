@@ -207,12 +207,17 @@ const WEEKLY_BARS = [45, 68, 58, 82, 64, 90, 74];
                   +12%
                 </span>
               </div>
-              <div class="mt-3 flex h-24 items-end gap-2">
+              <div class="mt-3 flex items-end gap-2">
                 @for (height of weeklyBars; track $index) {
-                  <div
-                    class="flex-1 rounded-t-md bg-gradient-to-t from-accent/35 to-accent"
-                    [style.height.%]="height"
-                  ></div>
+                  <div class="flex min-w-0 flex-1 flex-col items-center gap-1.5">
+                    <div class="flex h-20 w-full items-end">
+                      <div
+                        class="w-full rounded-t-md bg-gradient-to-t from-accent/35 to-accent"
+                        [style.height.%]="height"
+                      ></div>
+                    </div>
+                    <span class="text-[10px] font-medium text-white/55">{{ weekdays()[$index] }}</span>
+                  </div>
                 }
               </div>
             </div>
@@ -288,12 +293,17 @@ const WEEKLY_BARS = [45, 68, 58, 82, 64, 90, 74];
                   +12%
                 </span>
               </div>
-              <div class="mt-2 flex h-16 items-end gap-1.5">
+              <div class="mt-2 flex items-end gap-1.5">
                 @for (height of weeklyBars; track $index) {
-                  <div
-                    class="flex-1 rounded-t-sm bg-gradient-to-t from-accent/35 to-accent"
-                    [style.height.%]="height"
-                  ></div>
+                  <div class="flex min-w-0 flex-1 flex-col items-center gap-1">
+                    <div class="flex h-14 w-full items-end">
+                      <div
+                        class="w-full rounded-t-sm bg-gradient-to-t from-accent/35 to-accent"
+                        [style.height.%]="height"
+                      ></div>
+                    </div>
+                    <span class="text-[8px] font-medium text-white/55">{{ weekdays()[$index] }}</span>
+                  </div>
                 }
               </div>
             </div>
@@ -698,6 +708,13 @@ export class HomeComponent {
   private readonly tr = <T = string>(key: string): T => this.languageService.translate<T>(key);
   private readonly trSignal = (key: string) => this.languageService.translateSignal(key);
 
+  private list(key: string): string[] {
+    const value = this.tr<string[]>(key);
+    return Array.isArray(value) ? value : [];
+  }
+
+  protected readonly weekdays = computed(() => this.list('public.weekdaysShort'));
+
   /* ----------------------------- Hero ----------------------------- */
   protected readonly heroBadge = this.trSignal('public.home.hero.badge');
   protected readonly heroTitleA = this.trSignal('public.home.hero.titleA');
@@ -848,7 +865,7 @@ export class HomeComponent {
   protected readonly planningDescription = this.trSignal('public.home.planning.description');
   protected readonly planningLink = this.trSignal('public.home.planning.link');
   protected readonly planningToday = this.trSignal('public.home.planning.today');
-  protected readonly planningPoints = computed(() => this.tr<string[]>('public.home.planning.points'));
+  protected readonly planningPoints = computed(() => this.list('public.home.planning.points'));
 
   protected readonly timeline = computed(() => [
     {
@@ -881,7 +898,7 @@ export class HomeComponent {
   protected readonly wellnessEyebrow = this.trSignal('public.home.wellness.eyebrow');
   protected readonly wellnessTitle = this.trSignal('public.home.wellness.title');
   protected readonly wellnessDescription = this.trSignal('public.home.wellness.description');
-  protected readonly wellnessTags = computed(() => this.tr<string[]>('public.home.wellness.tags'));
+  protected readonly wellnessTags = computed(() => this.list('public.home.wellness.tags'));
 
   protected readonly wellnessMetrics = computed(() => [
     {
@@ -999,7 +1016,7 @@ export class HomeComponent {
   /* ----------------------------- Benefits ----------------------------- */
   protected readonly benefitsEyebrow = this.trSignal('public.home.benefits.eyebrow');
   protected readonly benefitsTitle = this.trSignal('public.home.benefits.title');
-  protected readonly benefits = computed(() => this.tr<string[]>('public.home.benefits.items'));
+  protected readonly benefits = computed(() => this.list('public.home.benefits.items'));
 
   /* ----------------------------- CTA ----------------------------- */
   protected readonly ctaBadge = this.trSignal('public.home.cta.badge');
