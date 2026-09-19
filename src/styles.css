@@ -1,0 +1,584 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+ * Digital Life Twin — Design tokens
+ * ------------------------------------------------------------------------- */
+
+@theme {
+  /* Typography */
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Space Grotesk", "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  /* Brand — Deep Navy (#1B3A57) */
+  --color-primary: #1b3a57;
+  --color-primary-dark: #12283c;
+  --color-primary-darker: #0b1d2d;
+  --color-primary-light: #24496b;
+  --color-primary-lighter: #2f587f;
+
+  /* Brand — Teal (#2A9D9D) */
+  --color-accent: #2a9d9d;
+  --color-accent-dark: #1b7070;
+  --color-accent-darker: #176363;
+  --color-accent-light: #4fb8b8;
+  --color-accent-lighter: #7fd1d1;
+
+  /* Navy scale */
+  --color-navy-50: #f3f6f9;
+  --color-navy-100: #e3ebf1;
+  --color-navy-200: #c4d4e1;
+  --color-navy-300: #9bb7cd;
+  --color-navy-400: #6d93b2;
+  --color-navy-500: #4b7394;
+  --color-navy-600: #3a5d7d;
+  --color-navy-700: #2c4a66;
+  --color-navy-800: #1b3a57;
+  --color-navy-900: #142c42;
+  --color-navy-950: #0b1d2d;
+
+  /* Teal scale */
+  --color-teal-50: #eff9f9;
+  --color-teal-100: #d8f1f1;
+  --color-teal-200: #b5e3e3;
+  --color-teal-300: #87cfcf;
+  --color-teal-400: #56b8b8;
+  --color-teal-500: #2a9d9d;
+  --color-teal-600: #228282;
+  --color-teal-700: #1f6868;
+  --color-teal-800: #1e5454;
+  --color-teal-900: #1c4646;
+  --color-teal-950: #0b2929;
+
+  /* Neutrals */
+  --color-background: #f7f9fa;
+  --color-surface: #ffffff;
+  --color-surface-muted: #eef2f4;
+  --color-surface-strong: #e4eaee;
+
+  --color-ink: #1b2a38;
+  --color-ink-muted: #52616f;
+  --color-ink-faint: #5b6d7d;
+
+  --color-line: #e3e8ec;
+  --color-line-strong: #d3dce2;
+
+  /* Semantic states */
+  --color-success: #16a34a;
+  --color-success-light: #e7f6ec;
+  --color-warning: #d97706;
+  --color-warning-light: #fdf3e3;
+  --color-danger: #dc2626;
+  --color-danger-light: #fdecec;
+
+  /* Shadows */
+  --shadow-card: 0 1px 2px rgb(11 29 45 / 0.04), 0 6px 20px -6px rgb(11 29 45 / 0.08);
+  --shadow-card-hover: 0 2px 4px rgb(11 29 45 / 0.05), 0 16px 40px -12px rgb(11 29 45 / 0.16);
+  --shadow-popover: 0 4px 10px rgb(11 29 45 / 0.06), 0 20px 50px -12px rgb(11 29 45 / 0.22);
+  --shadow-drawer: -12px 0 40px rgb(11 29 45 / 0.14);
+
+  /* Motion */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-soft: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Radius */
+  --radius-card: 1rem;
+  --radius-panel: 0.75rem;
+
+  /* Type scale — Display / H1 / H2 / H3 / Body / Small / Caption */
+  --text-caption: 0.75rem;
+  --text-caption--line-height: 1.4;
+  --text-caption--letter-spacing: 0.04em;
+  --text-body-sm: 0.875rem;
+  --text-body-sm--line-height: 1.6;
+  --text-body-lg: 1.0625rem;
+  --text-body-lg--line-height: 1.65;
+  --text-h3: 1.125rem;
+  --text-h3--line-height: 1.5;
+  --text-h3--font-weight: 600;
+  --text-h2: 1.5rem;
+  --text-h2--line-height: 1.3;
+  --text-h2--letter-spacing: -0.015em;
+  --text-h2--font-weight: 600;
+  --text-h1: 2rem;
+  --text-h1--line-height: 1.2;
+  --text-h1--letter-spacing: -0.02em;
+  --text-h1--font-weight: 600;
+  --text-display: clamp(2.5rem, 6vw, 4.25rem);
+  --text-display--line-height: 1.05;
+  --text-display--letter-spacing: -0.03em;
+  --text-display--font-weight: 600;
+
+  /* Shadows */
+  --shadow-soft: 0 1px 2px rgb(11 29 45 / 0.04), 0 2px 10px -2px rgb(11 29 45 / 0.06);
+  --shadow-glow: 0 0 0 1px rgb(42 157 157 / 0.16), 0 10px 44px -8px rgb(42 157 157 / 0.4);
+}
+
+/* ---------------------------------------------------------------------------
+ * Base
+ * ------------------------------------------------------------------------- */
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background font-sans text-ink antialiased;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-display text-primary;
+    text-wrap: balance;
+  }
+
+  ::selection {
+    background-color: var(--color-teal-100);
+    color: var(--color-primary-dark);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea,
+  [tabindex] {
+    outline-color: var(--color-accent);
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--color-navy-200);
+    border-radius: 999px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-navy-300);
+  }
+
+  /* Thin scrollbar for the sidebar and drawers */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  /* Sticky sections keep a consistent offset below the fixed nav */
+  section[id] {
+    scroll-margin-top: 5rem;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Utilities
+ * ------------------------------------------------------------------------- */
+
+@layer utilities {
+  /* Screen-reader only */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  /* Decorative grid / dot backgrounds */
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, rgb(27 58 87 / 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(27 58 87 / 0.05) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+
+  .bg-grid-light {
+    background-image:
+      linear-gradient(to right, rgb(255 255 255 / 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(255 255 255 / 0.05) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+
+  .bg-dots {
+    background-image: radial-gradient(rgb(27 58 87 / 0.12) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+
+  /* Brand gradient text */
+  .text-gradient {
+    background-image: linear-gradient(115deg, var(--color-primary) 0%, var(--color-accent) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .text-gradient-light {
+    background-image: linear-gradient(115deg, #ffffff 0%, var(--color-teal-200) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Soft glass panel */
+  .glass {
+    background-color: rgb(255 255 255 / 0.72);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+
+  .glass-dark {
+    background-color: rgb(11 29 45 / 0.55);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .animate-float {
+    animation: dlt-float 7s ease-in-out infinite;
+    will-change: transform;
+  }
+
+  .animate-glow-pulse {
+    animation: dlt-glow-pulse 6s ease-in-out infinite;
+    /* Promote to its own compositor layer so the opacity/transform keyframes
+       never run (or get invalidated) on the main thread. */
+    will-change: transform, opacity;
+  }
+
+  /* Wizard step transitions — direction-aware, mirrored in RTL */
+  .step-forward {
+    animation: dlt-step-forward 0.35s var(--ease-out-expo) both;
+  }
+
+  .step-back {
+    animation: dlt-step-back 0.35s var(--ease-out-expo) both;
+  }
+
+  html[dir='rtl'] .step-forward {
+    animation-name: dlt-step-back;
+  }
+
+  html[dir='rtl'] .step-back {
+    animation-name: dlt-step-forward;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Motion
+ * ------------------------------------------------------------------------- */
+
+@keyframes dlt-shimmer {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
+
+@keyframes dlt-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+@keyframes dlt-glow-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes dlt-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes dlt-step-forward {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes dlt-step-back {
+  from {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Theme — applied via SettingsService (data-theme on <html>)
+ * ------------------------------------------------------------------------- */
+
+/* Dark mode keeps the Deep Navy / Teal brand identity, restyling the neutral
+ * surfaces and text for a calm, high-contrast night experience. */
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-background: #0c1a27;
+  --color-surface: #13283e;
+  --color-surface-muted: #1a3853;
+  --color-surface-strong: #24496b;
+
+  --color-ink: #e7eef4;
+  --color-ink-muted: #a7bac9;
+  --color-ink-faint: #89abc0;
+
+  --color-line: #1f3e5c;
+  --color-line-strong: #2e506e;
+
+  /* Tinted chip backgrounds stay subtle on dark surfaces */
+  --color-teal-50: #0f2a2d;
+  --color-teal-100: #173b3f;
+  --color-navy-50: #12283c;
+  --color-navy-100: #1b3a57;
+  --color-success-light: #102b1c;
+  --color-warning-light: #2b2012;
+  --color-danger-light: #2b1515;
+
+  /* Navy text shades used inside tinted chips remain readable */
+  --color-navy-600: #6d93b2;
+  --color-navy-700: #9bb7cd;
+}
+
+/* `text-primary` doubles as the accent text color (headings, labels). In dark
+ * mode it must shift to a light navy so it reads on dark surfaces, while the
+ * primary background tokens (buttons, gradients) stay brand navy. */
+[data-theme='dark'] .text-primary {
+  color: #c9dbe8;
+}
+
+/* Brand teal text shades must lighten in dark mode so they keep contrast on
+ * dark surfaces and on dark tinted chips (badges, eyebrows, icons). */
+[data-theme='dark'] .text-accent {
+  color: var(--color-teal-300);
+}
+
+[data-theme='dark'] .text-accent-dark {
+  color: var(--color-teal-300);
+}
+
+/* Semantic state text (success / warning / danger) sits on pale tinted chips
+ * and neutral surfaces. The base tokens are too light for text, so text uses a
+ * deeper tone in light mode and a bright tone on dark surfaces. */
+.text-success {
+  color: #177a41;
+}
+
+.text-warning {
+  color: #a05a09;
+}
+
+.text-danger {
+  color: #b91c1c;
+}
+
+.text-amber-600 {
+  color: #a05a09;
+}
+
+.text-amber-700 {
+  color: #9a5409;
+}
+
+[data-theme='dark'] .text-success {
+  color: #4ade80;
+}
+
+[data-theme='dark'] .text-warning {
+  color: #fbbf24;
+}
+
+[data-theme='dark'] .text-danger {
+  color: #f87171;
+}
+
+[data-theme='dark'] .text-amber-600 {
+  color: #fbbf24;
+}
+
+[data-theme='dark'] .text-amber-700 {
+  color: #fbbf24;
+}
+
+/* Accent switch — keeps both choices within the Digital Life Twin palette. */
+html[data-accent='navy'] {
+  --color-accent: #1b3a57;
+  --color-accent-dark: #12283c;
+  --color-accent-darker: #0b1d2d;
+  --color-accent-light: #24496b;
+  --color-accent-lighter: #7d9cb8;
+}
+
+/* Reduced motion (user toggle) — also disabled by the OS-level preference. */
+html[data-motion='reduced'] *,
+html[data-motion='reduced'] *::before,
+html[data-motion='reduced'] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Text size — scales the whole rem-based layout proportionally. */
+html[data-text-scale='large'] {
+  font-size: 17px;
+}
+
+html[data-text-scale='xlarge'] {
+  font-size: 19px;
+}
+
+/* Enhanced contrast — stronger separators and focus rings. */
+html[data-contrast='high'] {
+  --color-line: #4b7394;
+  --color-line-strong: #6d93b2;
+  --color-ink-faint: #6d93b2;
+}
+
+html[data-contrast='high'] :focus-visible {
+  outline-width: 3px;
+  outline-offset: 3px;
+}
+
+/* Focus clavier — visibly stronger focus rings when enabled. */
+html[data-focus='strong'] :focus-visible {
+  outline-width: 3px;
+  outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------------------
+ * RTL (Arabic)
+ * ------------------------------------------------------------------------- */
+
+/* Arabic typography — Inter & Space Grotesk lack Arabic glyphs. */
+html[dir='rtl'] body {
+  font-family:
+    "IBM Plex Sans Arabic",
+    "Segoe UI",
+    Tahoma,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    sans-serif;
+}
+
+html[dir='rtl'] h1,
+html[dir='rtl'] h2,
+html[dir='rtl'] h3,
+html[dir='rtl'] h4,
+html[dir='rtl'] h5,
+html[dir='rtl'] h6 {
+  font-family:
+    "IBM Plex Sans Arabic",
+    "Segoe UI",
+    Tahoma,
+    ui-sans-serif,
+    system-ui,
+    sans-serif;
+}
+
+/* Number figures stay Latin in Arabic so metrics remain readable. */
+html[dir='rtl'] .tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Drawer — direction-aware positioning and off-screen transforms. */
+.drawer-left {
+  inset-inline-start: 0;
+}
+
+.drawer-right {
+  inset-inline-end: 0;
+}
+
+.drawer-left:not(.drawer-open) {
+  transform: translateX(-100%);
+}
+
+.drawer-right:not(.drawer-open) {
+  transform: translateX(100%);
+}
+
+html[dir='rtl'] .drawer-left:not(.drawer-open) {
+  transform: translateX(100%);
+}
+
+html[dir='rtl'] .drawer-right:not(.drawer-open) {
+  transform: translateX(-100%);
+}
+
+/* Mirrored decorative arrows (e.g. “see more” links) in RTL. */
+html[dir='rtl'] .mirror-rtl {
+  transform: scaleX(-1);
+}
