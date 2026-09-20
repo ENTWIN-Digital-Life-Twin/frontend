@@ -93,6 +93,10 @@ export const AR_TRANSLATIONS = {
       hourShort: 'س',
     },
   },
+  app: {
+    loadingTitle: 'تجهيز مساحتك',
+    loadingLabel: 'جارٍ تحميل يومك وأولوياتك ورفاهيتك…',
+  },
   adminPage: {
     eyebrow: 'المنصة',
     title: 'الإدارة',

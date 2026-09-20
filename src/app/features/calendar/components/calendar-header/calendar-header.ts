@@ -21,9 +21,12 @@ type ViewOption = { value: CalendarView; label: string };
     LucideCalendarDays,
     LucidePlus,
   ],
+   host: { class: 'block' },
   template: `
+
+  <div class="flex flex-col gap-5">
     <header class="flex flex-wrap items-end justify-between gap-4">
-      <div>
+      <div class="min-w-0">
         <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-ink-muted">
           {{ eyebrow() }}
         </p>
@@ -101,6 +104,7 @@ type ViewOption = { value: CalendarView; label: string };
         }
       </div>
     </div>
+  </div>
   `,
 })
 export class CalendarHeader {

@@ -40,7 +40,7 @@ import { WellnessService } from './services/wellness.service';
     WellnessDataForm,
   ],
   template: `
-    <div class="space-y-6">
+    <div class="flex flex-col gap-8 lg:gap-5">
       <app-wellness-header class="well-card" (add)="openForm()" />
 
       <div

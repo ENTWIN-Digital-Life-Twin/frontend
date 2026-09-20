@@ -1,8 +1,34 @@
 @if (routeLoading()) {
-  <div class="route-loader" role="status" aria-live="polite" aria-label="Chargement de l'application">
-    <div class="route-loader__brand">Digital Life Twin</div>
-    <div class="route-loader__spinner" aria-hidden="true"></div>
-    <span>Chargement de votre espace…</span>
+  <div
+    class="route-loader"
+    role="status"
+    aria-live="polite"
+    [attr.aria-label]="loadingLabel()"
+  >
+    <div class="route-loader__ambient" aria-hidden="true">
+      <span class="route-loader__orb route-loader__orb--teal"></span>
+      <span class="route-loader__orb route-loader__orb--navy"></span>
+    </div>
+
+    <div class="route-loader__card">
+      <div class="route-loader__mark" aria-hidden="true">
+        <img src="brand/logo-mark.png" alt="" width="40" height="40" />
+      </div>
+
+      <p class="route-loader__eyebrow">Digital Life Twin</p>
+      <h1 class="route-loader__title">{{ loadingTitle() }}</h1>
+      <p class="route-loader__text">{{ loadingLabel() }}</p>
+
+      <div class="route-loader__progress" aria-hidden="true">
+        <span class="route-loader__ring route-loader__ring--outer"></span>
+        <span class="route-loader__ring route-loader__ring--inner"></span>
+        <span class="route-loader__dot"></span>
+      </div>
+
+      <div class="route-loader__bar" aria-hidden="true">
+        <span class="route-loader__bar-fill"></span>
+      </div>
+    </div>
   </div>
 }
 

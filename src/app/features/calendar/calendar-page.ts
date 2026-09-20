@@ -30,8 +30,8 @@ import { CalendarService } from './services/calendar.service';
     LucideRotateCcw,
   ],
   template: `
-    <div class="space-y-6">
-      <app-calendar-header (create)="onCreate()" />
+    <div class="flex flex-col gap-8 lg:gap-5">
+      <app-calendar-header class="block lg:gap-5" (create)="onCreate()" />
 
       <div
         class="flex flex-wrap items-center justify-between gap-3 rounded-card border border-line bg-surface p-3 shadow-soft sm:p-4"
