@@ -1,18 +1,10 @@
 import { Component, computed, inject, input, output } from '@angular/core';
-import {
-  LucideAccessibility,
-  LucideBell,
-  LucideDynamicIcon,
-  LucidePalette,
-  LucideShield,
-  LucideSlidersHorizontal,
-  LucideUserRound,
-  type LucideIcon,
-} from '@lucide/angular';
+import { LucideAccessibility, LucideBell, LucideDynamicIcon, LucideKeyRound, LucidePalette, LucideShield, LucideSlidersHorizontal, LucideUserRound, type LucideIcon } from '@lucide/angular';
 import { LanguageService } from '../../core/services/language.service';
 
 export type SettingsSectionId =
   | 'account'
+  | 'security'
   | 'appearance'
   | 'notifications'
   | 'preferences'
@@ -27,6 +19,7 @@ interface SettingsNavItem {
 
 const NAV_ITEMS: SettingsNavItem[] = [
   { id: 'account', labelKey: 'settings.nav.account', icon: LucideUserRound },
+  { id: 'security', labelKey: 'settings.nav.security', icon: LucideKeyRound },
   { id: 'appearance', labelKey: 'settings.nav.appearance', icon: LucidePalette },
   { id: 'notifications', labelKey: 'settings.nav.notifications', icon: LucideBell },
   { id: 'preferences', labelKey: 'settings.nav.preferences', icon: LucideSlidersHorizontal },

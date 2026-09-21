@@ -1,6 +1,6 @@
 import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import { Observable, of, tap } from 'rxjs';
-import { AuthService } from '../../../core/services/auth/auth.service';
+import { AuthService, type UserPreferencesPayload } from '../../../core/services/auth/auth.service';
 
 export type ThemePreference = 'light' | 'dark' | 'system';
 export type AccentPreference = 'teal' | 'navy';
@@ -137,6 +137,8 @@ export class SettingsService {
   private readonly auth = inject(AuthService);
   private readonly stateSignal = signal<SettingsState>(read());
   readonly state = this.stateSignal.asReadonly();
+  private loadedUserId: string | null = null;
+  private persistTimer: ReturnType<typeof setTimeout> | null = null;
 
   /** The theme actually applied once `system` has been resolved. */
   readonly appliedTheme = computed<ThemePreference>(() => {
@@ -152,6 +154,7 @@ export class SettingsService {
       const profile = this.auth.profile();
       const user = this.auth.currentUser();
       if (!profile && !user) {
+        this.loadedUserId = null;
         return;
       }
       this.stateSignal.update((current) => ({
@@ -169,6 +172,13 @@ export class SettingsService {
           timezone: (profile?.timezone as TimezoneCode) || current.preferences.timezone,
         },
       }));
+      if (user && this.loadedUserId !== user.id) {
+        this.loadedUserId = user.id;
+        this.auth.getPreferences().subscribe({
+          next: (payload) => this.applyRemote(payload),
+          error: () => void 0,
+        });
+      }
     }, { allowSignalWrites: true });
 
     effect(() => {
@@ -301,9 +311,63 @@ export class SettingsService {
       ...fallback,
       profile: this.stateSignal().profile,
     });
+    this.queuePersist();
+  }
+
+  private applyRemote(payload: UserPreferencesPayload): void {
+    this.stateSignal.update((current) => ({
+      ...current,
+      appearance: {
+        theme: (payload.appearance?.theme as ThemePreference) || current.appearance.theme,
+        accent: (payload.appearance?.accent as AccentPreference) || current.appearance.accent,
+      },
+      notifications: {
+        ...current.notifications,
+        ...(payload.notifications as NotificationSettings | undefined),
+        summaryFrequency:
+          (payload.notifications?.summaryFrequency as SummaryFrequency) ||
+          current.notifications.summaryFrequency,
+      },
+      preferences: {
+        ...current.preferences,
+        dateFormat: (payload.preferences?.dateFormat as DateFormatId) || current.preferences.dateFormat,
+        weekStart: (payload.preferences?.weekStart as WeekStart) || current.preferences.weekStart,
+      },
+      privacy: { ...current.privacy, ...payload.privacy },
+      accessibility: {
+        ...current.accessibility,
+        ...payload.accessibility,
+        textSize: (payload.accessibility?.textSize as TextSize) || current.accessibility.textSize,
+      },
+    }));
+  }
+
+  private queuePersist(): void {
+    if (!this.auth.currentUser()) {
+      return;
+    }
+    if (this.persistTimer) {
+      clearTimeout(this.persistTimer);
+    }
+    this.persistTimer = setTimeout(() => {
+      const state = this.stateSignal();
+      this.auth
+        .updatePreferences({
+          appearance: state.appearance,
+          notifications: state.notifications,
+          preferences: {
+            dateFormat: state.preferences.dateFormat,
+            weekStart: state.preferences.weekStart,
+          },
+          privacy: state.privacy,
+          accessibility: state.accessibility,
+        })
+        .subscribe({ error: () => void 0 });
+    }, 250);
   }
 
   private patch(patch: Partial<SettingsState>): void {
     this.stateSignal.update((current) => ({ ...current, ...patch }));
+    this.queuePersist();
   }
 }

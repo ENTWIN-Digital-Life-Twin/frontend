@@ -3,6 +3,7 @@ import { PageHeader } from '../../shared/ui/page-header/page-header';
 import { SettingsNav, type SettingsSectionId } from './settings-nav';
 import { SettingsReveal } from './settings-reveal';
 import { SettingsAccount } from './settings-account';
+import { SettingsSecurity } from './settings-security';
 import { SettingsAppearance } from './settings-appearance';
 import { SettingsNotifications } from './settings-notifications';
 import { SettingsPreferences } from './settings-preferences';
@@ -18,6 +19,7 @@ import { LanguageService } from '../../core/services/language.service';
     SettingsNav,
     SettingsReveal,
     SettingsAccount,
+    SettingsSecurity,
     SettingsAppearance,
     SettingsNotifications,
     SettingsPreferences,
@@ -47,6 +49,9 @@ import { LanguageService } from '../../core/services/language.service';
           @switch (activeSection()) {
             @case ('account') {
               <app-settings-account appSettingsReveal />
+            }
+            @case ('security') {
+              <app-settings-security appSettingsReveal />
             }
             @case ('appearance') {
               <app-settings-appearance appSettingsReveal />
