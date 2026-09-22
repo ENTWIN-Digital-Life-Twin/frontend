@@ -38,7 +38,12 @@
 </div>
 
 @if (modal() === 'task') {
-  <app-planning-modal-task [entry]="editing()" (saved)="onSaved($event)" (closed)="onClose()" />
+  <app-task-form
+    [task]="editingTask()"
+    [presetDate]="service.selectedDate()"
+    (saved)="onTaskSaved($event)"
+    (closed)="onClose()"
+  />
 }
 @if (modal() === 'event') {
   <app-planning-modal-event [entry]="editing()" (saved)="onSaved($event)" (closed)="onClose()" />

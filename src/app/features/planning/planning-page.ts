@@ -3,11 +3,13 @@ import { ActivatedRoute } from '@angular/router';
 import { LanguageService } from '../../core/services/language.service';
 import { Button } from '../../shared/ui/button/button';
 import { Toast, type ToastTone } from '../../shared/ui/toast/toast';
+import { TaskForm } from '../tasks/components/task-form/task-form';
+import { TaskService } from '../tasks/services/task.service';
+import type { Task, TaskCategory } from '../tasks/models/task.models';
 import { EntryDetails } from './components/entry-details/entry-details';
 import { PlanningFilters } from './components/planning-filters/planning-filters';
 import { PlanningHeader } from './components/planning-header/planning-header';
 import { PlanningModalEvent } from './components/planning-modals/planning-modal-event';
-import { PlanningModalTask } from './components/planning-modals/planning-modal-task';
 import {
   PlanningQuickActions,
   type QuickActionKind,
@@ -32,7 +34,7 @@ type PlanningModal = 'task' | 'event' | null;
     PlanningQuickActions,
     PlanningTimeline,
     PlanningSidebar,
-    PlanningModalTask,
+    TaskForm,
     PlanningModalEvent,
     EntryDetails,
     Toast,
@@ -42,11 +44,13 @@ type PlanningModal = 'task' | 'event' | null;
 })
 export class PlanningPage implements OnInit {
   protected readonly service = inject(PlanningService);
+  private readonly taskService = inject(TaskService);
   private readonly languageService = inject(LanguageService);
   private readonly route = inject(ActivatedRoute);
 
   protected readonly modal = signal<PlanningModal>(null);
   protected readonly editing = signal<PlanningEntry | null>(null);
+  protected readonly editingTask = signal<Task | null>(null);
   protected readonly toast = signal<string | null>(null);
   protected readonly toastTone = signal<ToastTone>('primary');
   protected readonly loadingLabel = this.languageService.translateSignal('common.loading');
@@ -77,12 +81,39 @@ export class PlanningPage implements OnInit {
 
   protected openModal(kind: Exclude<PlanningModal, null>): void {
     this.editing.set(null);
+    this.editingTask.set(null);
     this.modal.set(kind);
   }
 
   protected onEdit(entry: PlanningEntry): void {
+    if (entry.type === 'task') {
+      this.editing.set(null);
+      this.editingTask.set(
+        this.taskService.tasks().find((task) => task.id === entry.id) ?? taskFromPlanningEntry(entry),
+      );
+      this.modal.set('task');
+      return;
+    }
+    this.editingTask.set(null);
     this.editing.set(entry);
-    this.modal.set(entry.type === 'task' ? 'task' : 'event');
+    this.modal.set('event');
+  }
+
+  protected onTaskSaved(task: Task): void {
+    const editing = this.editingTask();
+    const after = () => {
+      this.service.load();
+      this.toastTone.set('success');
+      this.toast.set(
+        this.languageService.translate(editing ? 'planning.toasts.updated' : 'planning.toasts.added'),
+      );
+      this.onClose();
+    };
+    if (editing) {
+      this.taskService.updateTask(task, after);
+    } else {
+      this.taskService.addTask(task, after);
+    }
   }
 
   protected onSaved(entry: PlanningEntry): void {
@@ -109,5 +140,31 @@ export class PlanningPage implements OnInit {
   protected onClose(): void {
     this.modal.set(null);
     this.editing.set(null);
+    this.editingTask.set(null);
   }
+}
+
+function taskFromPlanningEntry(entry: PlanningEntry): Task {
+  const category: TaskCategory =
+    entry.category === 'sport'
+      ? 'sport'
+      : entry.category === 'personal' || entry.category === 'meals'
+        ? 'personal'
+        : 'work';
+  return {
+    id: entry.id,
+    title: entry.title,
+    description: entry.description ?? '',
+    status: entry.status ?? 'todo',
+    priority: entry.priority ?? 'medium',
+    category,
+    dueDate: entry.date,
+    startTime: entry.start,
+    duration: entry.duration,
+    progress: entry.status === 'done' ? 100 : entry.status === 'in-progress' ? 50 : 0,
+    notes: '',
+    subtasks: [],
+    activity: [],
+    createdAt: entry.date,
+  };
 }

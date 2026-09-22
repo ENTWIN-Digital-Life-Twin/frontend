@@ -17,6 +17,7 @@ import {
   type PlanningFilter,
 } from '../models/planning.models';
 import { TaskCategoryDirectoryService } from './task-category-directory.service';
+import { TaskService } from '../../tasks/services/task.service';
 
 interface ConflictResponse {
   conflictType: string;
@@ -51,6 +52,7 @@ interface EventResponse {
   locationLabel: string | null;
   recurring: boolean;
   recurrenceRule: string | null;
+  participants?: string[];
   conflicts: ConflictResponse[];
 }
 
@@ -78,6 +80,7 @@ export class PlanningService {
   private readonly http = inject(HttpClient);
   private readonly languageService = inject(LanguageService);
   private readonly categories = inject(TaskCategoryDirectoryService);
+  private readonly tasks = inject(TaskService);
   private readonly baseUrl = environment.planningApiUrl;
   private readonly backendSummary = signal<DailyPlanSummaryResponse | null>(null);
 
@@ -208,6 +211,7 @@ export class PlanningService {
         tap(() => {
           this.saving.set(false);
           this.load();
+          this.tasks.reload();
         }),
         catchError((error) => this.operationFailed(error)),
       )
@@ -263,6 +267,7 @@ export class PlanningService {
           this.saving.set(false);
           this.closeEntry();
           this.load();
+          this.tasks.reload();
         }),
         catchError((error) => this.operationFailed(error)),
       )
@@ -296,7 +301,8 @@ export class PlanningService {
     const startDate = new Date(anchor);
     const endDate = new Date(startDate.getTime() + task.plannedDurationMinutes * 60_000);
     const taskCategory = this.categories.categoryFor(task.categoryId);
-    const category: PlanningCategory = taskCategory === 'sport' ? 'sport' : taskCategory === 'personal' ? 'personal' : 'work';
+    const category: PlanningCategory =
+      taskCategory === 'sport' ? 'sport' : taskCategory === 'personal' ? 'personal' : 'work';
     return {
       id: task.id,
       type: 'task',
@@ -328,6 +334,7 @@ export class PlanningService {
       end: this.localTime(end),
       duration: Math.max(1, Math.round((end.getTime() - start.getTime()) / 60_000)),
       location: event.locationLabel ?? undefined,
+      participants: event.participants ?? [],
       recurrence: event.recurring && event.recurrenceRule === 'DAILY' ? 'daily' : event.recurring ? 'weekly' : undefined,
       tone: event.eventType === 'SPORT' ? 'danger' : 'accent',
     };
@@ -337,7 +344,15 @@ export class PlanningService {
     return {
       title: entry.title,
       description: entry.description ?? null,
-      categoryId: this.categories.categoryIdFor(entry.category === 'meals' ? 'personal' : entry.category as 'work' | 'personal' | 'sport'),
+      categoryId: this.categories.categoryIdFor(
+        entry.category === 'meals' || entry.category === 'free'
+          ? 'personal'
+          : entry.category === 'sport'
+            ? 'sport'
+            : entry.category === 'personal'
+              ? 'personal'
+              : 'work',
+      ),
       priority: entry.priority?.toUpperCase() ?? 'MEDIUM',
       plannedDurationMinutes: entry.duration,
       ...(update ? { actualDurationMinutes: entry.status === 'done' ? entry.duration : null } : {}),
@@ -360,6 +375,7 @@ export class PlanningService {
       locationLabel: entry.location ?? null,
       recurring: Boolean(entry.recurrence),
       recurrenceRule: entry.recurrence?.toUpperCase() ?? null,
+      participants: entry.participants ?? [],
     };
   }
 

@@ -11,10 +11,12 @@ import {
   type TaskStatus,
 } from '../../models/task.models';
 import { ACTIONS, ERROR_TEXT, FIELD, GRID_2, INPUT, LABEL, TEXTAREA } from './form-styles';
+import { FormAssist } from '../../../../shared/ui/form-assist/form-assist';
+import type { FormSuggestion } from '../../../../core/services/ai/form-assist.service';
 
 @Component({
   selector: 'app-task-form',
-  imports: [Modal, Button, FormsModule],
+  imports: [Modal, Button, FormsModule, FormAssist],
   template: `
     <app-modal
       [title]="task() ? t('tasksForm.editTitle') : t('tasksForm.newTitle')"
@@ -33,6 +35,14 @@ import { ACTIONS, ERROR_TEXT, FIELD, GRID_2, INPUT, LABEL, TEXTAREA } from './fo
             [ngModel]="title()"
             name="title"
             (ngModelChange)="title.set($event)"
+          />
+          <app-form-assist
+            formType="TASK"
+            [title]="title()"
+            [category]="category()"
+            [description]="description()"
+            [enabled]="!task()"
+            (applied)="applySuggestion($event)"
           />
         </div>
 
@@ -178,6 +188,7 @@ import { ACTIONS, ERROR_TEXT, FIELD, GRID_2, INPUT, LABEL, TEXTAREA } from './fo
 })
 export class TaskForm {
   readonly task = input<Task | null>(null);
+  readonly presetDate = input<string | null>(null);
   readonly saved = output<Task>();
   readonly closed = output<void>();
 
@@ -217,19 +228,23 @@ export class TaskForm {
   constructor() {
     effect(() => {
       const existing = this.task();
-      if (!existing) {
+      if (existing) {
+        this.title.set(existing.title);
+        this.description.set(existing.description);
+        this.status.set(existing.status);
+        this.priority.set(existing.priority);
+        this.category.set(existing.category);
+        this.dueDate.set(existing.dueDate);
+        this.startTime.set(existing.startTime);
+        this.duration.set(existing.duration);
+        this.progress.set(existing.progress);
+        this.notes.set(existing.notes);
         return;
       }
-      this.title.set(existing.title);
-      this.description.set(existing.description);
-      this.status.set(existing.status);
-      this.priority.set(existing.priority);
-      this.category.set(existing.category);
-      this.dueDate.set(existing.dueDate);
-      this.startTime.set(existing.startTime);
-      this.duration.set(existing.duration);
-      this.progress.set(existing.progress);
-      this.notes.set(existing.notes);
+      const date = this.presetDate();
+      if (date) {
+        this.dueDate.set(date);
+      }
     });
   }
 
@@ -255,5 +270,23 @@ export class TaskForm {
       activity: existing?.activity ?? [],
       createdAt: existing?.createdAt ?? todayISO(),
     });
+  }
+
+  protected applySuggestion(item: FormSuggestion): void {
+    if (item.field === 'duration') {
+      this.duration.set(Math.max(5, Number(item.value) || this.duration()));
+      return;
+    }
+    if (item.field === 'priority' && ['low', 'medium', 'high'].includes(item.value)) {
+      this.priority.set(item.value as TaskPriority);
+      return;
+    }
+    if (item.field === 'category' && ['work', 'personal', 'sport', 'studies'].includes(item.value)) {
+      this.category.set(item.value as TaskCategory);
+      return;
+    }
+    if (item.field === 'description') {
+      this.description.set(item.value);
+    }
   }
 }

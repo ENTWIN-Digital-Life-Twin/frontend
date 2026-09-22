@@ -401,13 +401,14 @@ export class TasksPage implements OnInit, AfterViewInit {
 
   protected onToggle(task: Task): void {
     const wasDone = task.status === 'done';
-    this.service.toggleComplete(task.id);
-    this.toastTone.set('success');
-    this.toast.set(
-      this.languageService.translate(
-        wasDone ? 'tasks.toast.uncompleted' : 'tasks.toast.completed',
-      ),
-    );
+    this.service.toggleComplete(task.id, () => {
+      this.toastTone.set('success');
+      this.toast.set(
+        this.languageService.translate(
+          wasDone ? 'tasks.toast.uncompleted' : 'tasks.toast.completed',
+        ),
+      );
+    });
   }
 
   protected onSaved(task: Task): void {

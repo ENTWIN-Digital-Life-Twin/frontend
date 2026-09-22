@@ -3,6 +3,11 @@ import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import { environment } from '../../../../environments/environment';
 import { LanguageService } from '../../../core/services/language.service';
 import {
+  ReminderService,
+  minutesFromReminderKey,
+  reminderKeyFromMinutes,
+} from '../../notifications/services/reminder.service';
+import {
   CATEGORY_KEYS,
   FILTER_KEYS,
   addDaysISO,
@@ -40,6 +45,7 @@ interface EventResponse {
   locationLabel: string | null;
   recurring: boolean;
   recurrenceRule: string | null;
+  participants?: string[];
 }
 
 interface PageResponse<T> {
@@ -89,6 +95,7 @@ function fromInstant(iso: string): { date: string; time: string } {
 export class CalendarService {
   private readonly languageService = inject(LanguageService);
   private readonly http = inject(HttpClient);
+  private readonly reminderService = inject(ReminderService);
   private readonly baseUrl = `${environment.planningApiUrl}/events`;
 
   readonly events = signal<CalendarEvent[]>([]);
@@ -110,8 +117,10 @@ export class CalendarService {
       duration: durationMinutes,
       category: categoryFromEventType(res.eventType),
       location: res.locationLabel ?? undefined,
-      participants: extras?.participants,
-      reminder: extras?.reminder,
+      participants: res.participants ?? extras?.participants,
+      reminder: extras?.reminder ?? reminderKeyFromMinutes(
+        this.reminderService.findBySource('EVENT', res.id)?.advanceMinutes,
+      ),
     };
   }
 
@@ -126,6 +135,7 @@ export class CalendarService {
       locationLabel: event.location ?? null,
       recurring: false,
       recurrenceRule: null,
+      participants: event.participants ?? [],
     };
   }
 
@@ -146,6 +156,26 @@ export class CalendarService {
         next: (page) => this.events.set(page.content.map((res) => this.fromResponse(res))),
         error: () => this.events.set([]),
       });
+
+    effect(() => {
+      const byEvent = new Map(
+        this.reminderService
+          .reminders()
+          .filter((reminder) => reminder.sourceType === 'EVENT' && reminder.sourceResourceId)
+          .map((reminder) => [reminder.sourceResourceId as string, reminder]),
+      );
+      this.events.update((events) =>
+        events.map((event) => {
+          const reminder = byEvent.get(event.id);
+          return {
+            ...event,
+            reminder: reminder
+              ? reminderKeyFromMinutes(reminder.advanceMinutes)
+              : (event.reminder ?? 'none'),
+          };
+        }),
+      );
+    });
 
     effect(() => {
       const timer = setInterval(() => this.now.set(new Date()), 60_000);
@@ -351,6 +381,7 @@ export class CalendarService {
         this.events.update((events) =>
           events.map((item) => (item.id === tempId ? created : item)),
         );
+        this.syncReminder(created);
       },
       error: (err) => {
         console.error('Failed to create event', err);
@@ -370,6 +401,7 @@ export class CalendarService {
         this.events.update((events) =>
           events.map((item) => (item.id === event.id ? updated : item)),
         );
+        this.syncReminder(updated);
       },
       error: (err) => console.error('Failed to update event', err),
     });
@@ -378,9 +410,22 @@ export class CalendarService {
   deleteEvent(id: string): void {
     this.events.update((events) => events.filter((event) => event.id !== id));
     this.selectedEventId.set(null);
+    this.reminderService.deleteForSource('EVENT', id);
     this.http
       .delete(`${this.baseUrl}/${id}`)
       .subscribe({ error: (err) => console.error('Failed to delete event', err) });
+  }
+
+  private syncReminder(event: CalendarEvent): void {
+    this.reminderService.sync({
+      sourceType: 'EVENT',
+      sourceResourceId: event.id,
+      title: event.title ?? '',
+      message: event.description ?? null,
+      reminderType: 'EVENT',
+      triggerDateTime: toInstant(event.date, event.start),
+      advanceMinutes: minutesFromReminderKey(event.reminder),
+    });
   }
 
   eventsFor(iso: string): CalendarEvent[] {

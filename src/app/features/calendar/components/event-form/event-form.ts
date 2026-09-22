@@ -15,10 +15,12 @@ import {
   type ReminderKey,
 } from '../../models/calendar.models';
 import { ACTIONS, ERROR_TEXT, FIELD, GRID_2, INPUT, LABEL } from './form-styles';
+import { FormAssist } from '../../../../shared/ui/form-assist/form-assist';
+import type { FormSuggestion } from '../../../../core/services/ai/form-assist.service';
 
 @Component({
   selector: 'app-event-form',
-  imports: [Modal, Button, FormsModule],
+  imports: [Modal, Button, FormsModule, FormAssist],
   template: `
     <app-modal
       [title]="titleLabel()"
@@ -37,6 +39,14 @@ import { ACTIONS, ERROR_TEXT, FIELD, GRID_2, INPUT, LABEL } from './form-styles'
             [ngModel]="title()"
             name="title"
             (ngModelChange)="title.set($event)"
+          />
+          <app-form-assist
+            formType="EVENT"
+            [title]="title()"
+            [category]="category()"
+            [description]="description()"
+            [enabled]="!event()"
+            (applied)="applySuggestion($event)"
           />
         </div>
 
@@ -309,4 +319,33 @@ export class EventForm {
       reminder: this.reminder(),
     });
   }
+
+  protected applySuggestion(item: FormSuggestion): void {
+    if (item.field === 'durationMinutes') {
+      this.end.set(fromMinutes(toMinutes(this.start()) + (Number(item.value) || 45)));
+      return;
+    }
+    if (item.field === 'location' && !this.location().trim()) {
+      this.location.set(item.value);
+      return;
+    }
+    if (item.field === 'reminder' && this.REMINDER_KEYS.includes(item.value as ReminderKey)) {
+      this.reminder.set(item.value as ReminderKey);
+      return;
+    }
+    if (item.field === 'category' && CATEGORY_ORDER.includes(item.value as EventCategory)) {
+      this.category.set(item.value as EventCategory);
+      return;
+    }
+    if (item.field === 'description') {
+      this.description.set(item.value);
+    }
+  }
+}
+
+function fromMinutes(total: number): string {
+  const clamped = ((total % (24 * 60)) + 24 * 60) % (24 * 60);
+  const hours = Math.floor(clamped / 60);
+  const minutes = clamped % 60;
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 }

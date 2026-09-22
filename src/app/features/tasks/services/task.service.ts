@@ -3,6 +3,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { switchMap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { LanguageService } from '../../../core/services/language.service';
+import { ReminderService } from '../../notifications/services/reminder.service';
 import { TaskCategoryDirectoryService } from '../../planning/services/task-category-directory.service';
 import {
   CATEGORY_KEYS,
@@ -43,6 +44,7 @@ interface TaskResponse {
   completionPercentage: number | null;
   createdAt: string;
   updatedAt: string;
+  subtasks?: Subtask[];
 }
 
 interface PageResponse<T> {
@@ -98,6 +100,7 @@ export class TaskService {
   private readonly languageService = inject(LanguageService);
   private readonly http = inject(HttpClient);
   private readonly categoryDirectory = inject(TaskCategoryDirectoryService);
+  private readonly reminderService = inject(ReminderService);
   private readonly baseUrl = `${environment.planningApiUrl}/tasks`;
 
   private readonly tasksSignal = signal<Task[]>([]);
@@ -111,6 +114,17 @@ export class TaskService {
       .subscribe({
         next: (page) => this.tasksSignal.set(page.content.map((res) => this.fromResponse(res))),
         error: () => this.tasksSignal.set([]),
+      });
+  }
+
+  reload(): void {
+    this.http
+      .get<PageResponse<TaskResponse>>(this.baseUrl, {
+        params: new HttpParams().set('page', '0').set('size', '100'),
+      })
+      .subscribe({
+        next: (page) => this.tasksSignal.set(page.content.map((res) => this.fromResponse(res))),
+        error: (err) => console.error('Failed to reload tasks', err),
       });
   }
 
@@ -129,7 +143,7 @@ export class TaskService {
       duration: res.plannedDurationMinutes,
       progress: res.completionPercentage ?? 0,
       notes: extras?.notes ?? '',
-      subtasks: extras?.subtasks ?? [],
+      subtasks: res.subtasks ?? extras?.subtasks ?? [],
       activity: extras?.activity ?? [],
       createdAt: res.createdAt,
     };
@@ -146,6 +160,11 @@ export class TaskService {
       startDateTime: start,
       deadline: addMinutesIso(start, task.duration),
       completionPercentage: task.progress,
+      subtasks: task.subtasks.map((sub) => ({
+        id: sub.id,
+        title: sub.title,
+        done: sub.done,
+      })),
     };
   }
 
@@ -259,7 +278,7 @@ export class TaskService {
     this.selectedTaskId.set(id);
   }
 
-  toggleComplete(id: string): void {
+  toggleComplete(id: string, onDone?: (completed: boolean) => void): void {
     const current = this.tasksSignal().find((task) => task.id === id);
     if (!current) {
       return;
@@ -273,10 +292,19 @@ export class TaskService {
     );
     this.http
       .patch(`${this.baseUrl}/${id}/status`, { status: STATUS_TO_BACKEND[nextStatus] })
-      .subscribe({ error: (err) => console.error('Failed to update task status', err) });
+      .subscribe({
+        next: () => onDone?.(nextStatus === 'done'),
+        error: (err) => {
+          console.error('Failed to update task status', err);
+          this.tasksSignal.update((tasks) =>
+            tasks.map((task) => (task.id === id ? current : task)),
+          );
+        },
+      });
+    this.syncReminder({ ...current, status: nextStatus, progress: nextProgress });
   }
 
-  addTask(task: Task): void {
+  addTask(task: Task, onDone?: () => void): void {
     const tempId = task.id;
     const optimistic: Task = {
       ...task,
@@ -298,6 +326,8 @@ export class TaskService {
         if (this.selectedTaskId() === tempId) {
           this.selectedTaskId.set(created.id);
         }
+        this.syncReminder(created);
+        onDone?.();
       },
       error: (err) => {
         console.error('Failed to create task', err);
@@ -309,7 +339,7 @@ export class TaskService {
     });
   }
 
-  updateTask(task: Task): void {
+  updateTask(task: Task, onDone?: () => void): void {
     const withActivity: Task = {
       ...task,
       activity: [
@@ -328,6 +358,8 @@ export class TaskService {
         this.tasksSignal.update((tasks) =>
           tasks.map((item) => (item.id === task.id ? updated : item)),
         );
+        this.syncReminder(updated);
+        onDone?.();
       },
       error: (err) => console.error('Failed to update task', err),
     });
@@ -338,9 +370,22 @@ export class TaskService {
     if (this.selectedTaskId() === id) {
       this.selectedTaskId.set(null);
     }
+    this.reminderService.deleteForSource('TASK', id);
     this.http
       .delete(`${this.baseUrl}/${id}`)
       .subscribe({ error: (err) => console.error('Failed to delete task', err) });
+  }
+
+  private syncReminder(task: Task): void {
+    this.reminderService.sync({
+      sourceType: 'TASK',
+      sourceResourceId: task.id,
+      title: task.title,
+      message: task.description || null,
+      reminderType: 'TASK',
+      triggerDateTime: toInstant(task.dueDate, task.startTime),
+      advanceMinutes: task.status === 'done' ? null : 15,
+    });
   }
 
   updateNotes(id: string, notes: string): void {
@@ -367,44 +412,47 @@ export class TaskService {
     if (!clean) {
       return;
     }
-    this.tasksSignal.update((tasks) =>
-      tasks.map((task) =>
-        task.id === taskId
-          ? {
-              ...task,
-              subtasks: [
-                ...task.subtasks,
-                { id: `s-${Date.now()}`, title: clean, done: false },
-              ],
-            }
-          : task,
-      ),
-    );
+    this.mutateSubtasks(taskId, (task) => ({
+      ...task,
+      subtasks: [
+        ...task.subtasks,
+        { id: crypto.randomUUID(), title: clean, done: false },
+      ],
+    }));
   }
 
   toggleSubtask(taskId: string, subtaskId: string): void {
-    this.tasksSignal.update((tasks) =>
-      tasks.map((task) =>
-        task.id === taskId
-          ? {
-              ...task,
-              subtasks: task.subtasks.map((sub) =>
-                sub.id === subtaskId ? { ...sub, done: !sub.done } : sub,
-              ),
-            }
-          : task,
+    this.mutateSubtasks(taskId, (task) => ({
+      ...task,
+      subtasks: task.subtasks.map((sub) =>
+        sub.id === subtaskId ? { ...sub, done: !sub.done } : sub,
       ),
-    );
+    }));
   }
 
   removeSubtask(taskId: string, subtaskId: string): void {
-    this.tasksSignal.update((tasks) =>
-      tasks.map((task) =>
-        task.id === taskId
-          ? { ...task, subtasks: task.subtasks.filter((sub) => sub.id !== subtaskId) }
-          : task,
-      ),
-    );
+    this.mutateSubtasks(taskId, (task) => ({
+      ...task,
+      subtasks: task.subtasks.filter((sub) => sub.id !== subtaskId),
+    }));
+  }
+
+  private mutateSubtasks(taskId: string, mutator: (task: Task) => Task): void {
+    const current = this.tasksSignal().find((task) => task.id === taskId);
+    if (!current) {
+      return;
+    }
+    const updated = mutator(current);
+    this.tasksSignal.update((tasks) => tasks.map((task) => (task.id === taskId ? updated : task)));
+    this.http.put<TaskResponse>(`${this.baseUrl}/${taskId}`, this.toUpdateRequest(updated)).subscribe({
+      next: (res) => {
+        const synced = this.fromResponse(res, updated);
+        this.tasksSignal.update((tasks) =>
+          tasks.map((task) => (task.id === taskId ? synced : task)),
+        );
+      },
+      error: (err) => console.error('Failed to persist subtasks', err),
+    });
   }
 
   subtaskProgress(task: Task): number {
