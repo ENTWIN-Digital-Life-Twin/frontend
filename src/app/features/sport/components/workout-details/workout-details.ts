@@ -182,6 +182,7 @@ export class WorkoutDetails {
     cycling: this.languageService.translate('sport.types.cycling'),
     gym: this.languageService.translate('sport.types.gym'),
     stretching: this.languageService.translate('sport.types.stretching'),
+    other: this.languageService.translate('sport.types.other'),
   }));
 
   protected readonly INTENSITY_LABELS = computed<Record<WorkoutIntensity, string>>(() => ({

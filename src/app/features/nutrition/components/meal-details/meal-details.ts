@@ -10,6 +10,7 @@ import {
   type Meal,
   type MealType,
 } from '../../models/nutrition.models';
+import { mealImageUrl } from '../../models/meal-catalog';
 
 @Component({
   selector: 'app-meal-details',
@@ -17,14 +18,25 @@ import {
   template: `
     <app-drawer [open]="true" side="right" tone="surface" (closed)="closed.emit()">
       <div class="flex h-full flex-col">
-        <header class="border-b border-line px-6 py-5">
-          <div class="flex items-start justify-between gap-3">
-            <div class="min-w-0">
-              <app-badge [variant]="badgeVariant()" [dot]="true">{{ MEAL_TYPE_LABELS()[meal().type] }}</app-badge>
-              <h2 class="mt-2 font-display text-xl font-semibold tracking-tight text-primary">
-                {{ meal().name }}
-              </h2>
-              <p class="mt-1 text-sm text-ink-muted">{{ meal().time }} · {{ formatKcal(meal().calories) }} kcal</p>
+        <header class="border-b border-line">
+          @if (mealPhoto(); as photo) {
+            <img
+              [src]="photo"
+              [alt]="meal().name"
+              class="h-40 w-full object-cover"
+              loading="lazy"
+              referrerpolicy="no-referrer"
+            />
+          }
+          <div class="px-6 py-5">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <app-badge [variant]="badgeVariant()" [dot]="true">{{ MEAL_TYPE_LABELS()[meal().type] }}</app-badge>
+                <h2 class="mt-2 font-display text-xl font-semibold tracking-tight text-primary">
+                  {{ meal().name }}
+                </h2>
+                <p class="mt-1 text-sm text-ink-muted">{{ meal().time }} · {{ formatKcal(meal().calories) }} kcal</p>
+              </div>
             </div>
           </div>
         </header>
@@ -124,6 +136,11 @@ export class MealDetails {
 
   protected readonly formatKcal = formatKcal;
   protected readonly formatGrams = formatGrams;
+
+  protected readonly mealPhoto = computed(() => {
+    const meal = this.meal();
+    return mealImageUrl(meal.name, meal.type) ?? mealImageUrl(meal.name);
+  });
 
   protected readonly macrosLabel = this.languageService.translateSignal('nutritionDetails.macros');
   protected readonly foodsLabel = this.languageService.translateSignal('nutritionDetails.foods');

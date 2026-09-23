@@ -1,7 +1,7 @@
 import type { LucideIcon } from '@lucide/angular';
-import { LucideBike, LucideDumbbell, LucideFootprints, LucidePersonStanding, LucideZap } from '@lucide/angular';
+import { LucideBike, LucideDumbbell, LucideEllipsis, LucideFootprints, LucidePersonStanding, LucideZap } from '@lucide/angular';
 
-export type WorkoutType = 'running' | 'walking' | 'cycling' | 'gym' | 'stretching';
+export type WorkoutType = 'running' | 'walking' | 'cycling' | 'gym' | 'stretching' | 'other';
 export type WorkoutIntensity = 'low' | 'medium' | 'high';
 
 export interface Workout {
@@ -23,7 +23,7 @@ export interface WeeklyStat {
   calories: number;
 }
 
-export const WORKOUT_TYPES: WorkoutType[] = ['running', 'walking', 'cycling', 'gym', 'stretching'];
+export const WORKOUT_TYPES: WorkoutType[] = ['running', 'walking', 'cycling', 'gym', 'stretching', 'other'];
 
 export const WORKOUT_TYPE_ICONS: Record<WorkoutType, LucideIcon> = {
   running: LucideZap,
@@ -31,6 +31,7 @@ export const WORKOUT_TYPE_ICONS: Record<WorkoutType, LucideIcon> = {
   cycling: LucideBike,
   gym: LucideDumbbell,
   stretching: LucidePersonStanding,
+  other: LucideEllipsis,
 };
 
 export const WORKOUT_TYPE_CHIP: Record<WorkoutType, string> = {
@@ -39,6 +40,7 @@ export const WORKOUT_TYPE_CHIP: Record<WorkoutType, string> = {
   cycling: 'bg-success-light text-success',
   gym: 'bg-warning-light text-warning',
   stretching: 'bg-surface-muted text-ink',
+  other: 'bg-navy-50 text-navy-700',
 };
 
 export const WORKOUT_TYPE_BAR: Record<WorkoutType, string> = {
@@ -47,6 +49,7 @@ export const WORKOUT_TYPE_BAR: Record<WorkoutType, string> = {
   cycling: 'bg-success',
   gym: 'bg-warning',
   stretching: 'bg-navy-300',
+  other: 'bg-navy-400',
 };
 
 export const WORKOUT_TYPE_TEXT: Record<WorkoutType, string> = {
@@ -55,6 +58,7 @@ export const WORKOUT_TYPE_TEXT: Record<WorkoutType, string> = {
   cycling: 'text-success',
   gym: 'text-warning',
   stretching: 'text-navy-600',
+  other: 'text-navy-700',
 };
 
 export const DAILY_STEPS_GOAL = 8000;

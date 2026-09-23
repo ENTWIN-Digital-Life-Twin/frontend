@@ -118,6 +118,20 @@ type TypeOption = { value: WorkoutType; label: string };
             <p class="text-[11px] text-ink-muted">{{ minutesThisWeek() }}</p>
           </div>
         </div>
+
+        <form class="mt-4 flex flex-wrap items-end gap-2" (submit)="$event.preventDefault(); saveSteps()">
+          <label class="flex min-w-[10rem] flex-1 flex-col gap-1 text-[11px] text-ink-muted">
+            {{ logStepsLabel() }}
+            <input
+              class="h-10 rounded-panel border border-line bg-surface px-3 text-sm text-primary"
+              type="number"
+              min="0"
+              [value]="stepsDraft()"
+              (input)="stepsDraft.set(numberValue($event))"
+            />
+          </label>
+          <button appButton variant="secondary" size="md" type="submit">{{ saveStepsLabel() }}</button>
+        </form>
       </section>
 
       <!-- Graphique + objectifs -->
@@ -296,6 +310,9 @@ export class SportPage implements AfterViewInit {
   protected readonly activeMinutes = this.languageService.translateSignal('sport.activeMinutes');
   protected readonly caloriesBurned = this.languageService.translateSignal('sport.caloriesBurned');
   protected readonly stepsToday = this.languageService.translateSignal('sport.stepsToday');
+  protected readonly logStepsLabel = this.languageService.translateSignal('sport.logSteps');
+  protected readonly saveStepsLabel = this.languageService.translateSignal('sport.saveSteps');
+  protected readonly stepsDraft = signal(0);
   protected readonly minutesThisWeek = this.languageService.translateSignal('sport.minutesThisWeek');
   protected readonly activity = this.languageService.translateSignal('sport.activity');
   protected readonly thisWeek = this.languageService.translateSignal('sport.thisWeek');
@@ -332,6 +349,7 @@ export class SportPage implements AfterViewInit {
     { value: 'cycling', label: this.languageService.translate('sport.types.cycling') },
     { value: 'gym', label: this.languageService.translate('sport.types.gym') },
     { value: 'stretching', label: this.languageService.translate('sport.types.stretching') },
+    { value: 'other', label: this.languageService.translate('sport.types.other') },
   ]);
 
   protected readonly WORKOUT_TYPE_LABELS = computed<Record<WorkoutType, string>>(() => ({
@@ -340,6 +358,7 @@ export class SportPage implements AfterViewInit {
     cycling: this.languageService.translate('sport.types.cycling'),
     gym: this.languageService.translate('sport.types.gym'),
     stretching: this.languageService.translate('sport.types.stretching'),
+    other: this.languageService.translate('sport.types.other'),
   }));
 
   protected percentReached(percent: number): string {
@@ -357,6 +376,14 @@ export class SportPage implements AfterViewInit {
   protected openCreate(): void {
     this.editing.set(null);
     this.formOpen.set(true);
+  }
+
+  protected numberValue(event: Event): number {
+    return Number((event.target as HTMLInputElement).value) || 0;
+  }
+
+  protected saveSteps(): void {
+    this.service.logSteps(this.stepsDraft());
   }
 
   protected openDetails(workout: Workout): void {

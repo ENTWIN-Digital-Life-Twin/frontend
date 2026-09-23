@@ -1,16 +1,21 @@
-import { Component, inject, output, signal } from '@angular/core';
+import { Component, computed, inject, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LanguageService } from '../../../../core/services/language.service';
 import { Button } from '../../../../shared/ui/button/button';
 import { Field } from '../../../../shared/ui/field/field';
 import { Modal } from '../../../../shared/ui/modal/modal';
 import {
+  formatMinutes,
   MOOD_LEVELS,
+  sleepMinutesBetween,
   STRESS_LEVELS,
+  wakeTimeFromDuration,
   type StressLevel,
   type WellnessDataType,
 } from '../../models/wellness.models';
 import { WellnessService } from '../../services/wellness.service';
+import { FormAssist } from '../../../../shared/ui/form-assist/form-assist';
+import type { FormSuggestion } from '../../../../core/services/ai/form-assist.service';
 
 const FIELD = 'block';
 const LABEL = 'mb-1.5 block text-xs font-semibold text-ink-muted';
@@ -27,7 +32,7 @@ const TYPES: { value: WellnessDataType; labelKey: string }[] = [
 
 @Component({
   selector: 'app-wellness-data-form',
-  imports: [Modal, Button, Field, FormsModule],
+  imports: [Modal, Button, Field, FormsModule, FormAssist],
   template: `
     <app-modal
       [title]="title()"
@@ -53,6 +58,12 @@ const TYPES: { value: WellnessDataType; labelKey: string }[] = [
           </button>
         }
       </div>
+      <app-form-assist
+        formType="WELLNESS"
+        [title]="selected()"
+        [category]="selected()"
+        (applied)="applySuggestion($event)"
+      />
 
       <div class="mt-6">
         @switch (selected()) {
@@ -100,6 +111,38 @@ const TYPES: { value: WellnessDataType; labelKey: string }[] = [
                   (ngModelChange)="wake.set($event)"
                 />
               </app-field>
+            </div>
+            <div class="mt-4 rounded-panel border border-line bg-surface-muted p-3">
+              <p class="text-[11px] uppercase tracking-wide text-ink-faint">{{ sleepDurationLabel() }}</p>
+              <p class="mt-0.5 font-display text-2xl font-semibold tabular-nums text-primary">
+                {{ sleepDurationText() }}
+              </p>
+              <div class="mt-3 grid grid-cols-2 gap-3">
+                <app-field [label]="sleepHoursLabel()">
+                  <input
+                    [class]="INPUT"
+                    type="number"
+                    min="0"
+                    max="16"
+                    step="1"
+                    [ngModel]="sleepHours()"
+                    name="sleepHours"
+                    (ngModelChange)="onSleepHours($event)"
+                  />
+                </app-field>
+                <app-field [label]="sleepMinutesLabel()">
+                  <input
+                    [class]="INPUT"
+                    type="number"
+                    min="0"
+                    max="59"
+                    step="5"
+                    [ngModel]="sleepMins()"
+                    name="sleepMins"
+                    (ngModelChange)="onSleepMins($event)"
+                  />
+                </app-field>
+              </div>
             </div>
             <p class="mt-3 text-xs text-ink-faint">{{ sleepHint() }}</p>
           }
@@ -203,6 +246,13 @@ export class WellnessDataForm {
   );
   protected readonly bedtimeLabel = this.languageService.translateSignal('wellness.timeline.bedtime');
   protected readonly wakeLabel = this.languageService.translateSignal('wellness.timeline.wake');
+  protected readonly sleepDurationLabel = this.languageService.translateSignal(
+    'wellness.dataForm.sleepDuration',
+  );
+  protected readonly sleepHoursLabel = this.languageService.translateSignal('wellness.dataForm.sleepHours');
+  protected readonly sleepMinutesLabel = this.languageService.translateSignal(
+    'wellness.dataForm.sleepMinutes',
+  );
   protected readonly sleepHint = this.languageService.translateSignal('wellness.dataForm.sleepHint');
   protected readonly moodAriaLabel = this.languageService.translateSignal('wellness.dataForm.moodAria');
   protected readonly stressAriaLabel = this.languageService.translateSignal(
@@ -217,14 +267,31 @@ export class WellnessDataForm {
 
   protected readonly selected = signal<WellnessDataType>('hydration');
   protected readonly ml = signal(250);
-  protected readonly bed = signal('23:15');
-  protected readonly wake = signal('06:35');
+  protected readonly bed = signal(this.service.sleepToday().bedTime || '23:15');
+  protected readonly wake = signal(this.service.sleepToday().wakeTime || '06:35');
   protected readonly mood = signal(4);
   protected readonly stress = signal<StressLevel>('low');
   protected readonly minutes = signal(20);
 
+  protected readonly sleepMinutes = computed(() => sleepMinutesBetween(this.bed(), this.wake()));
+  protected readonly sleepDurationText = computed(() =>
+    formatMinutes(this.sleepMinutes(), this.languageService.getLocale()),
+  );
+  protected readonly sleepHours = computed(() => Math.floor(this.sleepMinutes() / 60));
+  protected readonly sleepMins = computed(() => this.sleepMinutes() % 60);
+
   protected selectType(type: WellnessDataType): void {
     this.selected.set(type);
+  }
+
+  protected onSleepHours(value: string | number): void {
+    const hours = Math.max(0, Math.min(16, Number(value) || 0));
+    this.wake.set(wakeTimeFromDuration(this.bed(), hours * 60 + this.sleepMins()));
+  }
+
+  protected onSleepMins(value: string | number): void {
+    const mins = Math.max(0, Math.min(59, Number(value) || 0));
+    this.wake.set(wakeTimeFromDuration(this.bed(), this.sleepHours() * 60 + mins));
   }
 
   protected moodAria(label: string): string {
@@ -254,5 +321,31 @@ export class WellnessDataForm {
         break;
     }
     this.saved.emit();
+  }
+
+  protected applySuggestion(item: FormSuggestion): void {
+    if (item.field === 'ml') {
+      this.ml.set(Number(item.value) || this.ml());
+      return;
+    }
+    if (item.field === 'bed') {
+      this.bed.set(item.value);
+      return;
+    }
+    if (item.field === 'wake') {
+      this.wake.set(item.value);
+      return;
+    }
+    if (item.field === 'minutes') {
+      this.minutes.set(Number(item.value) || this.minutes());
+      return;
+    }
+    if (item.field === 'mood') {
+      this.mood.set(Number(item.value) || this.mood());
+      return;
+    }
+    if (item.field === 'stress') {
+      this.stress.set(item.value as StressLevel);
+    }
   }
 }

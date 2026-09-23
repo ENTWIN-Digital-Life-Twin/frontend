@@ -16,6 +16,7 @@ import {
   type MealType,
   type NutritionPeriod,
 } from './models/nutrition.models';
+import { mealImageUrl } from './models/meal-catalog';
 import { MealForm } from './components/meal-form/meal-form';
 import { MealDetails } from './components/meal-details/meal-details';
 const PERIODS: NutritionPeriod[] = ['today', '7d', '30d'];
@@ -200,12 +201,22 @@ interface MacroStat {
                 (click)="openDetails(meal)"
                 class="group flex items-center gap-4 rounded-panel border border-line bg-surface p-4 text-left shadow-soft transition-all duration-200 hover:border-accent/40 hover:shadow-card"
               >
-                <span
-                  class="flex h-11 w-11 shrink-0 items-center justify-center rounded-panel"
-                  [class]="MEAL_TYPE_CHIP[meal.type]"
-                >
-                  <svg lucideUtensils class="h-5 w-5" aria-hidden="true"></svg>
-                </span>
+                @if (mealImage(meal); as photo) {
+                  <img
+                    [src]="photo"
+                    [alt]="meal.name"
+                    class="h-11 w-11 shrink-0 rounded-panel object-cover"
+                    loading="lazy"
+                    referrerpolicy="no-referrer"
+                  />
+                } @else {
+                  <span
+                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-panel"
+                    [class]="MEAL_TYPE_CHIP[meal.type]"
+                  >
+                    <svg lucideUtensils class="h-5 w-5" aria-hidden="true"></svg>
+                  </span>
+                }
                 <span class="min-w-0 flex-1">
                   <span class="flex flex-wrap items-center gap-2">
                     <span class="text-[11px] font-semibold uppercase tracking-wide text-ink-muted">
@@ -434,6 +445,10 @@ export class NutritionPage implements AfterViewInit {
   protected readonly formatKcal = formatKcal;
   protected readonly formatGrams = formatGrams;
   protected readonly formatLiters = formatLiters;
+
+  protected mealImage(meal: Meal): string | null {
+    return mealImageUrl(meal.name, meal.type) ?? mealImageUrl(meal.name);
+  }
 
   protected readonly dateLabel = computed(() =>
     new Intl.DateTimeFormat(this.languageService.getLocale(), {

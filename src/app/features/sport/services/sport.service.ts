@@ -52,26 +52,41 @@ interface PageResponse<T> {
   totalPages: number;
 }
 
+interface HealthRecordResponse {
+  id: string;
+  recordedAt: string;
+  stepCount: number | null;
+  notes: string | null;
+}
+
 const TYPE_TO_BACKEND: Record<WorkoutType, BackendActivityType> = {
   running: 'RUNNING',
   walking: 'WALKING',
   cycling: 'CYCLING',
   gym: 'GYM',
   stretching: 'YOGA',
+  other: 'OTHER',
 };
 
-// wellness-service supports more activity types than this UI exposes a dedicated icon/chip
-// for; anything without a 1:1 match collapses into the closest visual bucket ('gym').
 const TYPE_FROM_BACKEND: Record<BackendActivityType, WorkoutType> = {
   RUNNING: 'running',
   WALKING: 'walking',
   CYCLING: 'cycling',
   GYM: 'gym',
   YOGA: 'stretching',
-  SWIMMING: 'gym',
+  SWIMMING: 'other',
   STRENGTH_TRAINING: 'gym',
-  FOOTBALL: 'gym',
-  OTHER: 'gym',
+  FOOTBALL: 'other',
+  OTHER: 'other',
+};
+
+const FALLBACK_TITLE: Record<WorkoutType, string> = {
+  running: 'Running',
+  walking: 'Walking',
+  cycling: 'Cycling',
+  gym: 'Workout',
+  stretching: 'Stretching',
+  other: 'Other',
 };
 
 const INTENSITY_TO_BACKEND: Record<WorkoutIntensity, BackendIntensity> = {
@@ -84,14 +99,6 @@ const INTENSITY_FROM_BACKEND: Record<BackendIntensity, WorkoutIntensity> = {
   LOW: 'low',
   MODERATE: 'medium',
   HIGH: 'high',
-};
-
-const FALLBACK_TITLE: Record<WorkoutType, string> = {
-  running: 'Running',
-  walking: 'Walking',
-  cycling: 'Cycling',
-  gym: 'Workout',
-  stretching: 'Stretching',
 };
 
 // wellness-service's Workout entity only has a single free-text `notes` column, but this UI
@@ -182,9 +189,12 @@ export class SportService {
   private readonly languageService = inject(LanguageService);
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.wellnessApiUrl}/wellness/workouts`;
+  private readonly healthUrl = `${environment.wellnessApiUrl}/wellness/health-records`;
 
   private readonly workoutsSignal = signal<Workout[]>([]);
   readonly workouts = this.workoutsSignal.asReadonly();
+  private readonly stepsSignal = signal(0);
+  private todayStepsRecordId: string | null = null;
 
   readonly selectedWorkoutId = signal<string | null>(null);
   readonly selectedWorkout = computed(
@@ -205,6 +215,7 @@ export class SportService {
           this.workoutsSignal.set([]);
         },
       });
+    this.loadTodaySteps();
   }
 
   readonly todayWorkouts = computed(() =>
@@ -226,17 +237,63 @@ export class SportService {
     };
   });
 
-  // wellness-service has no dedicated step-count entity yet; estimate from logged distance
-  // as a reasonable placeholder until a real pedometer/steps source is wired in.
-  readonly stepsToday = computed(() => {
-    const base = 6200;
-    const fromDistance = this.todaySummary().distance * 1250;
-    return Math.round(base + fromDistance);
-  });
+  readonly stepsToday = computed(() => this.stepsSignal());
 
   readonly stepsPercent = computed(() =>
     Math.min(100, Math.round((this.stepsToday() / DAILY_STEPS_GOAL) * 100)),
   );
+
+  logSteps(count: number): void {
+    const stepCount = Math.max(0, Math.round(count));
+    this.stepsSignal.set(stepCount);
+    const body = {
+      recordedAt: new Date().toISOString(),
+      stepCount,
+      notes: 'daily-steps',
+    };
+    if (this.todayStepsRecordId) {
+      this.http.put<HealthRecordResponse>(`${this.healthUrl}/${this.todayStepsRecordId}`, body).subscribe({
+        next: (res) => {
+          this.todayStepsRecordId = res.id;
+          this.stepsSignal.set(res.stepCount ?? stepCount);
+        },
+        error: (err) => console.error('Failed to update steps', err),
+      });
+      return;
+    }
+    this.http.post<HealthRecordResponse>(this.healthUrl, body).subscribe({
+      next: (res) => {
+        this.todayStepsRecordId = res.id;
+        this.stepsSignal.set(res.stepCount ?? stepCount);
+      },
+      error: (err) => console.error('Failed to log steps', err),
+    });
+  }
+
+  private loadTodaySteps(): void {
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+    this.http
+      .get<PageResponse<HealthRecordResponse>>(this.healthUrl, {
+        params: new HttpParams()
+          .set('from', start.toISOString())
+          .set('to', end.toISOString())
+          .set('page', '0')
+          .set('size', '50')
+          .set('sort', 'recordedAt,desc'),
+      })
+      .subscribe({
+        next: (page) => {
+          const marked = page.content.find((item) => item.notes === 'daily-steps');
+          const record = marked ?? page.content.find((item) => item.stepCount != null);
+          this.todayStepsRecordId = record?.id ?? null;
+          this.stepsSignal.set(record?.stepCount ?? 0);
+        },
+        error: () => this.stepsSignal.set(0),
+      });
+  }
 
   readonly weekTotal = computed(() => {
     const list = this.workoutsSignal().filter(
