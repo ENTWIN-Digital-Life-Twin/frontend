@@ -1,0 +1,321 @@
+<app-auth-shell>
+  <app-auth-page-shell>
+    @if (status() === 'success') {
+      <div class="step-forward flex flex-col items-center gap-5 py-8 text-center">
+        <span
+          class="flex h-16 w-16 items-center justify-center rounded-full bg-teal-50 text-accent-dark"
+        >
+          <svg lucideCheck class="h-8 w-8" stroke-width="2.5" aria-hidden="true"></svg>
+        </span>
+        <div>
+          <h1 class="font-display text-h1 tracking-tight text-primary">
+            {{ successTitle() }}
+          </h1>
+          <p class="mx-auto mt-2 max-w-sm text-body-sm leading-relaxed text-ink-muted">
+            {{ successText() }}
+          </p>
+        </div>
+        <button appButton variant="primary" size="lg" (click)="goToDashboard()">
+          {{ goDashboard() }}
+        </button>
+      </div>
+    } @else {
+      <app-auth-heading [eyebrow]="eyebrow()" [title]="title()" [subtitle]="subtitle()" />
+
+      <div class="mt-7" [attr.aria-label]="currentStepTitle()">
+        <div class="flex items-center justify-between gap-3" aria-live="polite">
+          <p class="text-sm font-semibold text-primary">{{ currentStepTitle() }}</p>
+          <p class="shrink-0 text-xs font-medium text-ink-faint">
+            {{ stepLabel() }} {{ displayedStep() }} {{ stepOf() }} {{ STEP_COUNT }}
+          </p>
+        </div>
+        <div
+          class="mt-2.5 flex gap-1.5"
+          role="progressbar"
+          aria-valuemin="1"
+          [attr.aria-valuemax]="STEP_COUNT"
+          [attr.aria-valuenow]="displayedStep()"
+        >
+          @for (index of STEP_INDEXES; track index) {
+            <span
+              class="h-1.5 flex-1 rounded-full transition-colors duration-300"
+              [class.bg-accent]="segmentActive(index)"
+              [class.bg-line]="!segmentActive(index)"
+            ></span>
+          }
+        </div>
+        <p class="mt-2 text-xs leading-relaxed text-ink-muted">
+          {{ currentStepSubtitle() }}
+        </p>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="onPrimary()" class="mt-6" novalidate>
+        <div
+          [class.step-forward]="direction() === 'forward'"
+          [class.step-back]="direction() === 'back'"
+        >
+          @switch (step()) {
+            <!-- Step 1: Identity -->
+            @case (0) {
+              <div class="grid gap-5 sm:grid-cols-2">
+                <app-field
+                  [label]="firstNameLabel()"
+                  [id]="'register-first'"
+                  [error]="errorFor('firstName')"
+                >
+                  <div class="relative">
+                    <svg
+                      lucideUser
+                      class="pointer-events-none absolute start-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-faint"
+                      aria-hidden="true"
+                    ></svg>
+                    <input
+                      appInput
+                      id="register-first"
+                      type="text"
+                      formControlName="firstName"
+                      [placeholder]="firstNamePlaceholder()"
+                      autocomplete="given-name"
+                      class="ps-10"
+                      [appInputInvalid]="
+                        form.controls.firstName.touched && form.controls.firstName.invalid
+                      "
+                    />
+                  </div>
+                </app-field>
+                <app-field
+                  [label]="lastNameLabel()"
+                  [id]="'register-last'"
+                  [error]="errorFor('lastName')"
+                >
+                  <div class="relative">
+                    <svg
+                      lucideUser
+                      class="pointer-events-none absolute start-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-faint"
+                      aria-hidden="true"
+                    ></svg>
+                    <input
+                      appInput
+                      id="register-last"
+                      type="text"
+                      formControlName="lastName"
+                      [placeholder]="lastNamePlaceholder()"
+                      autocomplete="family-name"
+                      class="ps-10"
+                      [appInputInvalid]="
+                        form.controls.lastName.touched && form.controls.lastName.invalid
+                      "
+                    />
+                  </div>
+                </app-field>
+              </div>
+            }
+            <!-- Step 2: Email -->
+            @case (1) {
+              <div>
+                <app-field
+                  [label]="emailLabel()"
+                  [id]="'register-email'"
+                  [error]="errorFor('email')"
+                >
+                  <div class="relative">
+                    <svg
+                      lucideMail
+                      class="pointer-events-none absolute start-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-faint"
+                      aria-hidden="true"
+                    ></svg>
+                    <input
+                      appInput
+                      id="register-email"
+                      type="email"
+                      formControlName="email"
+                      [placeholder]="emailPlaceholder()"
+                      autocomplete="email"
+                      class="ps-10"
+                      [appInputInvalid]="
+                        form.controls.email.touched && form.controls.email.invalid
+                      "
+                    />
+                  </div>
+                </app-field>
+              </div>
+            }
+            <!-- Step 3: Password -->
+            @case (2) {
+              <div class="grid gap-5 sm:grid-cols-2">
+                <app-field
+                  [label]="passwordLabel()"
+                  [id]="'register-password'"
+                  [hint]="passwordHint()"
+                  [error]="errorFor('password')"
+                >
+                  <div class="relative">
+                    <svg
+                      lucideLock
+                      class="pointer-events-none absolute start-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-faint"
+                      aria-hidden="true"
+                    ></svg>
+                    <input
+                      appInput
+                      id="register-password"
+                      [type]="showPassword() ? 'text' : 'password'"
+                      formControlName="password"
+                      placeholder="••••••••"
+                      autocomplete="new-password"
+                      class="ps-10 pe-11"
+                      [appInputInvalid]="
+                        form.controls.password.touched && form.controls.password.invalid
+                      "
+                    />
+                    <button
+                      type="button"
+                      class="absolute end-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-panel text-ink-faint transition-colors duration-200 hover:bg-surface-muted hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+                      (click)="togglePasswordVisibility()"
+                      [attr.aria-label]="showPassword() ? hidePassword() : showPasswordLabel()"
+                    >
+                      @if (showPassword()) {
+                        <svg lucideEyeOff class="h-4 w-4" aria-hidden="true"></svg>
+                      } @else {
+                        <svg lucideEye class="h-4 w-4" aria-hidden="true"></svg>
+                      }
+                    </button>
+                  </div>
+                </app-field>
+                <app-field
+                  [label]="confirmLabel()"
+                  [id]="'register-confirm'"
+                  [error]="confirmError()"
+                >
+                  <div class="relative">
+                    <svg
+                      lucideLock
+                      class="pointer-events-none absolute start-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-faint"
+                      aria-hidden="true"
+                    ></svg>
+                    <input
+                      appInput
+                      id="register-confirm"
+                      [type]="showPassword() ? 'text' : 'password'"
+                      formControlName="confirmPassword"
+                      placeholder="••••••••"
+                      autocomplete="new-password"
+                      class="ps-10 pe-11"
+                      [appInputInvalid]="confirmInvalid()"
+                    />
+                    <button
+                      type="button"
+                      class="absolute end-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-panel text-ink-faint transition-colors duration-200 hover:bg-surface-muted hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+                      (click)="togglePasswordVisibility()"
+                      [attr.aria-label]="showPassword() ? hidePassword() : showPasswordLabel()"
+                    >
+                      @if (showPassword()) {
+                        <svg lucideEyeOff class="h-4 w-4" aria-hidden="true"></svg>
+                      } @else {
+                        <svg lucideEye class="h-4 w-4" aria-hidden="true"></svg>
+                      }
+                    </button>
+                  </div>
+                </app-field>
+              </div>
+            }
+            <!-- Step 4: Terms -->
+            @case (3) {
+              <div class="rounded-panel border border-line bg-surface-muted/40 p-5">
+                <app-checkbox [(checked)]="termsAccepted" [ariaLabel]="termsAria()">
+                  <span>
+                    {{ termsPrefix() }}
+                    <a href="/terms" target="_blank" class="font-medium text-accent-dark hover:text-accent">{{ termsLink() }}</a>
+                    {{ termsAnd() }}
+                    <a href="/privacy" target="_blank" class="font-medium text-accent-dark hover:text-accent">{{ privacyLink() }}</a>.
+                  </span>
+                </app-checkbox>
+                @if (termsError()) {
+                  <p
+                    class="mt-3 flex items-center gap-1.5 text-xs font-medium text-danger"
+                    role="alert"
+                  >
+                    <svg lucideInfo class="h-3.5 w-3.5 shrink-0" aria-hidden="true"></svg>
+                    {{ termsErrorMessage() }}
+                  </p>
+                }
+              </div>
+            }
+            <!-- Step 5: Confirmation -->
+            @default {
+              <div>
+                <div class="rounded-panel border border-line bg-surface-muted/40 p-4 sm:p-5">
+                  <dl class="divide-y divide-line">
+                    <div class="flex items-center justify-between gap-4 py-2.5 first:pt-0 last:pb-0">
+                      <dt class="text-xs font-medium text-ink-muted">{{ summaryName() }}</dt>
+                      <dd class="truncate text-sm font-semibold text-ink">
+                        {{ form.controls.firstName.value }} {{ form.controls.lastName.value }}
+                      </dd>
+                    </div>
+                    <div class="flex items-center justify-between gap-4 py-2.5 first:pt-0 last:pb-0">
+                      <dt class="text-xs font-medium text-ink-muted">{{ summaryEmail() }}</dt>
+                      <dd class="truncate text-sm font-semibold text-ink">
+                        {{ form.controls.email.value }}
+                      </dd>
+                    </div>
+                    <div class="flex items-center justify-between gap-4 py-2.5 first:pt-0 last:pb-0">
+                      <dt class="text-xs font-medium text-ink-muted">{{ summaryPassword() }}</dt>
+                      <dd class="text-sm font-semibold text-ink">••••••••</dd>
+                    </div>
+                  </dl>
+                </div>
+                <p class="mt-4 flex items-start gap-2 text-xs leading-relaxed text-ink-muted">
+                  <svg
+                    lucideCheck
+                    class="mt-0.5 h-4 w-4 shrink-0 text-accent"
+                    stroke-width="2.5"
+                    aria-hidden="true"
+                  ></svg>
+                  <span>
+                    {{ termsPrefix() }} {{ termsLink() }} {{ termsAnd() }}
+                    {{ privacyLink() }}.
+                  </span>
+                </p>
+              </div>
+            }
+          }
+        </div>
+
+        <div class="mt-8 flex items-center justify-between gap-3">
+          <button
+            appButton
+            variant="secondary"
+            type="button"
+            class="min-w-28"
+            [class.invisible]="step() === 0"
+            (click)="onBack()"
+            [disabled]="status() === 'loading'"
+          >
+            <svg lucideArrowLeft class="mirror-rtl h-4 w-4" aria-hidden="true"></svg>
+            {{ backLabel() }}
+          </button>
+          <button
+            appButton
+            [variant]="step() === STEP_COUNT ? 'accent' : 'primary'"
+            type="submit"
+            class="min-w-40 flex-1 sm:flex-none"
+            size="lg"
+            [loading]="status() === 'loading'"
+            [disabled]="status() === 'loading'"
+          >
+            {{ primaryLabel() }}
+          </button>
+        </div>
+      </form>
+
+      <p class="mt-7 text-center text-sm text-ink-muted">
+        {{ haveAccount() }}
+        <a
+          routerLink="/login"
+          class="font-semibold text-accent-dark transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 rounded-sm"
+        >
+          {{ loginLink() }}
+        </a>
+      </p>
+    }
+  </app-auth-page-shell>
+</app-auth-shell>

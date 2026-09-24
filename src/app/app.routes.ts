@@ -10,7 +10,7 @@ export function seo(config: SeoConfig): { seo: SeoConfig } {
 export const routes: Routes = [
   {
     path: 'login',
-    loadComponent: () => import('./features/auth/login/login').then((m) => m.LoginComponent),
+    loadComponent: () => import('./features/auth/login/login.component').then((m) => m.LoginComponent),
     data: { ...seo({
       title: 'Connexion — Digital Life Twin',
       description:
@@ -20,7 +20,7 @@ export const routes: Routes = [
   {
     path: 'register',
     loadComponent: () =>
-      import('./features/auth/register/register').then((m) => m.RegisterComponent),
+      import('./features/auth/register/register.component').then((m) => m.RegisterComponent),
     data: { ...seo({
       title: 'Créer un compte — Digital Life Twin',
       description:
@@ -85,7 +85,7 @@ export const routes: Routes = [
       {
         path: 'dashboard',
         loadComponent: () =>
-          import('./features/dashboard/dashboard').then((m) => m.DashboardComponent),
+          import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent),
         data: { preload: false },
       },
       {
