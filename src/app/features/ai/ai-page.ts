@@ -344,9 +344,12 @@ export class AiPage implements AfterViewInit {
       return;
     }
     this.question.set('');
+    const history = this.messages()
+      .filter((item) => item.content.trim())
+      .map((item) => ({ role: item.role, content: item.content }));
     this.messages.update((list) => [...list, { id: makeId('m'), role: 'user', content: text }]);
     this.typing.set(true);
-    this.aiService.sendMessage(text).subscribe({
+    this.aiService.sendMessage(text, history).subscribe({
       next: (reply) => {
         this.messages.update((list) => [
           ...list,

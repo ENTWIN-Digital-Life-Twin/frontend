@@ -10,7 +10,9 @@ import { Button } from '../../shared/ui/button/button';
 import { LanguageService } from '../../core/services/language.service';
 import { AuthService } from '../../core/services/auth/auth.service';
 import { DashboardService } from '../../core/services/dashboard/dashboard.service';
-import { AiService } from '../ai/services/ai.service';
+import { AiService, type ProposedTaskPayload } from '../ai/services/ai.service';
+import { TaskService } from '../tasks/services/task.service';
+import { todayISO, type TaskCategory, type TaskPriority } from '../tasks/models/task.models';
 import {
   SUGGESTED_QUESTION_KEYS,
   WELCOME_KEY,
@@ -118,6 +120,18 @@ function welcomeMessage(locale: string, name: string): AssistantMessage {
                   [class.text-ink]="message.role === 'assistant'"
                 >
                   <p>{{ message.content }}</p>
+                  @if (message.proposedTask && !message.taskCreated) {
+                    <button
+                      type="button"
+                      class="mt-2 rounded-full border border-accent/40 bg-surface px-3 py-1 text-xs font-semibold text-accent-dark hover:bg-accent/10"
+                      (click)="createProposedTask(message.id, message.proposedTask)"
+                    >
+                      {{ createTaskLabel() }}
+                    </button>
+                  }
+                  @if (message.taskCreated) {
+                    <p class="mt-2 text-xs font-medium text-success">{{ taskCreatedLabel() }}</p>
+                  }
                   <p
                     class="mt-1.5 text-right text-[10px] tabular-nums"
                     [class.text-white/75]="message.role === 'user'"
@@ -223,12 +237,26 @@ export class AssistantPage implements AfterViewInit {
   private readonly auth = inject(AuthService);
   private readonly ai = inject(AiService);
   private readonly dashboard = inject(DashboardService);
+  private readonly tasks = inject(TaskService);
 
   protected readonly TONE_DOT = TONE_DOT;
 
   private readonly initialConversation = this.createConversation();
   protected readonly conversations = signal<AssistantConversation[]>([this.initialConversation]);
   protected readonly activeId = signal(this.initialConversation.id);
+
+  constructor() {
+    this.auth.getAssistantConversations().subscribe({
+      next: (items) => {
+        const conversations = (items as AssistantConversation[]).filter((item) => item?.id && item.messages);
+        if (conversations.length) {
+          this.conversations.set(conversations);
+          this.activeId.set(conversations[0].id);
+        }
+      },
+      error: () => void 0,
+    });
+  }
   protected readonly draft = signal('');
   protected readonly typing = signal(false);
 
@@ -256,6 +284,8 @@ export class AssistantPage implements AfterViewInit {
   );
   protected readonly inputAria = this.languageService.translateSignal('assistantPage.inputAria');
   protected readonly sendAria = this.languageService.translateSignal('assistantPage.sendAria');
+  protected readonly createTaskLabel = this.languageService.translateSignal('assistantPage.createTask');
+  protected readonly taskCreatedLabel = this.languageService.translateSignal('assistantPage.taskCreated');
 
   protected readonly suggestedQuestions = computed(() =>
     SUGGESTED_QUESTION_KEYS.map((key) => this.languageService.translate<string>(key)),
@@ -319,6 +349,8 @@ export class AssistantPage implements AfterViewInit {
         'contentKey' in message
           ? this.languageService.translate(message.contentKey, message.contentVars)
           : message.content,
+      proposedTask: 'proposedTask' in message ? message.proposedTask : undefined,
+      taskCreated: 'taskCreated' in message ? Boolean(message.taskCreated) : false,
     })),
   );
 
@@ -335,6 +367,7 @@ export class AssistantPage implements AfterViewInit {
     const conversation = this.createConversation();
     this.conversations.update((list) => [conversation, ...list]);
     this.activeId.set(conversation.id);
+    this.persist();
   }
 
   protected submit(): void {
@@ -351,6 +384,16 @@ export class AssistantPage implements AfterViewInit {
     if (!text || this.typing()) {
       return;
     }
+    const history = (this.activeConversation()?.messages ?? [])
+      .map((message) => ({
+        role: message.role,
+        content:
+          'contentKey' in message
+            ? this.languageService.translate(message.contentKey, message.contentVars)
+            : message.content,
+      }))
+      .filter((turn) => turn.content.trim())
+      .slice(-12);
     const userMessage: AssistantMessage = {
       id: makeId('m'),
       role: 'user',
@@ -369,8 +412,8 @@ export class AssistantPage implements AfterViewInit {
       ),
     );
     this.typing.set(true);
-    this.ai.sendMessage(text).subscribe({
-      next: (replyText) => this.appendAssistant(replyText),
+    this.ai.sendChat(text, history).subscribe({
+      next: (reply) => this.appendAssistant(reply.answer, reply.proposedTask),
       error: () => this.appendAssistant(this.languageService.translate('aiPage.chatError')),
     });
   }
@@ -392,7 +435,41 @@ export class AssistantPage implements AfterViewInit {
     });
   }
 
-  private appendAssistant(replyText: string): void {
+  protected createProposedTask(messageId: string, draft: ProposedTaskPayload): void {
+    this.tasks.addTask({
+      id: `t-${Date.now()}`,
+      title: draft.title.trim(),
+      description: (draft.description ?? '').trim(),
+      status: 'todo',
+      priority: toPriority(draft.priority),
+      category: toCategory(draft.category),
+      dueDate: todayISO(),
+      startTime: '09:00',
+      duration: Math.max(5, Number(draft.durationMinutes) || 45),
+      progress: 0,
+      notes: '',
+      subtasks: [],
+      activity: [],
+      createdAt: todayISO(),
+    });
+    this.conversations.update((list) =>
+      list.map((item) =>
+        item.id === this.activeId()
+          ? {
+              ...item,
+              messages: item.messages.map((message) =>
+                message.id === messageId && 'content' in message
+                  ? { ...message, taskCreated: true }
+                  : message,
+              ),
+            }
+          : item,
+      ),
+    );
+    this.persist();
+  }
+
+  private appendAssistant(replyText: string, proposedTask?: ProposedTaskPayload | null): void {
     this.conversations.update((list) =>
       list.map((item) =>
         item.id === this.activeId()
@@ -406,6 +483,7 @@ export class AssistantPage implements AfterViewInit {
                   role: 'assistant',
                   content: replyText,
                   time: timeNow(this.languageService.getLocale()),
+                  proposedTask: proposedTask ?? undefined,
                 },
               ],
             }
@@ -413,6 +491,11 @@ export class AssistantPage implements AfterViewInit {
       ),
     );
     this.typing.set(false);
+    this.persist();
+  }
+
+  private persist(): void {
+    this.auth.saveAssistantConversations(this.conversations()).subscribe({ error: () => void 0 });
   }
 
   private createConversation(): AssistantConversation {
@@ -433,4 +516,29 @@ export class AssistantPage implements AfterViewInit {
     const rest = minutes % 60;
     return `${hours} h ${String(rest).padStart(2, '0')}`;
   }
+}
+
+function toPriority(value: string | undefined): TaskPriority {
+  const normalized = (value ?? '').toLowerCase();
+  if (normalized === 'high' || normalized === 'urgent') {
+    return 'high';
+  }
+  if (normalized === 'low') {
+    return 'low';
+  }
+  return 'medium';
+}
+
+function toCategory(value: string | undefined): TaskCategory {
+  const normalized = (value ?? '').toLowerCase();
+  if (normalized === 'sport') {
+    return 'sport';
+  }
+  if (normalized === 'studies' || normalized === 'study') {
+    return 'studies';
+  }
+  if (normalized === 'personal') {
+    return 'personal';
+  }
+  return 'work';
 }
