@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { NavigationEnd, Router, RouterOutlet, type ActivatedRoute } from '@angular/router';
 import { filter } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -13,6 +13,7 @@ import { SeoService, type SeoConfig } from './core/services/seo/seo.service';
 export class App {
   private readonly router = inject(Router);
   private readonly seo = inject(SeoService);
+  readonly routeLoading = signal(!this.router.navigated);
 
   constructor() {
     this.router.events
@@ -20,7 +21,10 @@ export class App {
         filter((event): event is NavigationEnd => event instanceof NavigationEnd),
         takeUntilDestroyed(),
       )
-      .subscribe(() => this.applySeo());
+      .subscribe(() => {
+        this.routeLoading.set(false);
+        this.applySeo();
+      });
   }
 
   /**

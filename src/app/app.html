@@ -1,1 +1,9 @@
+@if (routeLoading()) {
+  <div class="route-loader" role="status" aria-live="polite" aria-label="Chargement de l'application">
+    <div class="route-loader__brand">Digital Life Twin</div>
+    <div class="route-loader__spinner" aria-hidden="true"></div>
+    <span>Chargement de votre espace…</span>
+  </div>
+}
+
 <router-outlet />
