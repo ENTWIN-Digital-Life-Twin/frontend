@@ -15,6 +15,7 @@ export interface DayMetrics {
 }
 
 export interface SleepNight {
+  id?: string;
   date: string;
   bedTime: string;
   wakeTime: string;
@@ -33,8 +34,10 @@ export type TimelineKind = 'wake' | 'hydration' | 'meal' | 'break' | 'activity' 
 export interface TimelineItem {
   id: string;
   time: string;
-  titleKey: string;
-  detailKey: string;
+  titleKey?: string;
+  title?: string;
+  detailKey?: string;
+  detail?: string;
   detailVars?: Record<string, string>;
   kind: TimelineKind;
 }
@@ -50,6 +53,9 @@ export interface WellnessInsight {
   titleKey: string;
   messageKey: string;
   recommendationKey: string;
+  title?: string;
+  message?: string;
+  recommendation?: string;
   confidence: number;
   factors: InsightFactor[];
 }

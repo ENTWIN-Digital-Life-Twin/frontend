@@ -10,6 +10,9 @@ import { LanguageService } from '../../../../core/services/language.service';
 import { WellnessService } from '../../services/wellness.service';
 
 const GOAL_ICONS: Record<string, LucideIcon> = {
+  sleep: LucideMoon,
+  hydration: LucideDroplets,
+  minutes: LucideCoffee,
   'goal-sleep': LucideMoon,
   'goal-hydra': LucideDroplets,
   'goal-pause': LucideCoffee,
@@ -66,6 +69,7 @@ export class WellnessGoals {
   protected readonly goals = computed(() =>
     this.service.goals().map((goal) => ({
       id: goal.id,
+      kind: goal.kind,
       current: goal.current,
       target: goal.target,
       progress: goal.progress,
@@ -77,5 +81,6 @@ export class WellnessGoals {
     })),
   );
 
-  protected readonly iconOf = (goal: { id: string }): LucideIcon => GOAL_ICONS[goal.id];
+  protected readonly iconOf = (goal: { id: string; kind?: string }): LucideIcon =>
+    GOAL_ICONS[goal.kind ?? ''] ?? GOAL_ICONS[goal.id] ?? LucideCoffee;
 }
