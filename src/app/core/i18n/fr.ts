@@ -868,6 +868,9 @@ export const FR_TRANSLATIONS = {
     globalBalance: 'Votre équilibre global',
     summaryText:
       'Votre journée est globalement bien équilibrée. Les principaux leviers d’amélioration sont l’hydratation et la tâche en retard. Une pause après le déjeuner soutiendrait votre concentration de l’après-midi.',
+    noInsightsYet:
+      'Pas encore assez de données pour générer des insights. Enregistrez votre sommeil, votre hydratation ou vos tâches pour commencer.',
+    chatError: 'Désolé, je n’ai pas pu obtenir de réponse pour le moment. Réessayez dans un instant.',
     categories: {
       productivity: 'Productivité',
       wellness: 'Bien-être',

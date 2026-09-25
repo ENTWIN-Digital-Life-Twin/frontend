@@ -4,14 +4,13 @@ import { LucideArrowUp, LucideDynamicIcon, LucideSparkles } from '@lucide/angula
 import { Button } from '../../shared/ui/button/button';
 import { Badge } from '../../shared/ui/badge/badge';
 import { LanguageService } from '../../core/services/language.service';
+import { AiService } from './services/ai.service';
 import {
   AI_CATEGORY_CHIP,
   AI_CATEGORY_ICONS,
   AI_CATEGORY_KEYS,
-  MOCK_INSIGHTS,
   RISK_KEYS,
   SUGGESTED_QUESTION_KEYS,
-  generateReply,
   makeId,
   type AiCategory,
   type ChatMessage,
@@ -91,7 +90,7 @@ const RISK_BADGE: Record<string, 'success' | 'warning' | 'danger'> = {
                   </h2>
                 </div>
               </div>
-              <span class="font-display text-3xl font-bold tabular-nums text-teal-200">82/100</span>
+              <span class="font-display text-3xl font-bold tabular-nums text-teal-200">{{ aiService.globalScore() }}/100</span>
             </div>
             <p class="mt-4 max-w-2xl text-sm leading-relaxed text-white/80">
               {{ summaryText() }}
@@ -99,6 +98,14 @@ const RISK_BADGE: Record<string, 'success' | 'warning' | 'danger'> = {
           </section>
 
           <!-- Insights by category -->
+          @if (groups().length === 0 && !aiService.loading()) {
+            <section
+              data-reveal
+              class="rounded-card border border-dashed border-line-strong bg-surface/60 p-8 text-center shadow-card"
+            >
+              <p class="text-sm text-ink-muted">{{ noInsightsYet() }}</p>
+            </section>
+          }
           @for (group of groups(); track group.category) {
             <section data-reveal>
               <div class="mb-3 flex items-center gap-2.5">
@@ -275,31 +282,19 @@ const RISK_BADGE: Record<string, 'success' | 'warning' | 'danger'> = {
 export class AiPage implements AfterViewInit {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly languageService = inject(LanguageService);
+  protected readonly aiService = inject(AiService);
 
-  protected readonly displayInsights = computed<LocalizedAiInsight[]>(() =>
-    MOCK_INSIGHTS.map((insight) => ({
-      id: insight.id,
-      category: insight.category,
-      risk: insight.risk,
-      confidence: insight.confidence,
-      title: this.languageService.translate(insight.titleKey),
-      explanation: this.languageService.translate(insight.explanationKey),
-      recommendation: this.languageService.translate(insight.recommendationKey),
-      factors: insight.factors.map((factor) => ({
-        label: this.languageService.translate(factor.labelKey),
-        value: factor.valueKey ? this.languageService.translate(factor.valueKey) : factor.value ?? '',
-      })),
-    })),
-  );
-
-  protected readonly groups = computed(() => categoryGroups(this.displayInsights()));
+  protected readonly groups = computed(() => categoryGroups(this.aiService.insights()));
 
   protected readonly eyebrow = this.languageService.translateSignal('aiPage.eyebrow');
   protected readonly title = this.languageService.translateSignal('aiPage.title');
   protected readonly subtitle = this.languageService.translateSignal('aiPage.subtitle');
-  protected readonly insightsToday = this.languageService.translateSignal('aiPage.insightsToday', {
-    count: String(MOCK_INSIGHTS.length),
-  });
+  protected readonly noInsightsYet = this.languageService.translateSignal('aiPage.noInsightsYet');
+  protected readonly insightsToday = computed(() =>
+    this.languageService.translate('aiPage.insightsToday', {
+      count: String(this.aiService.insights().length),
+    }),
+  );
   protected readonly overview = this.languageService.translateSignal('aiPage.overview');
   protected readonly globalBalance = this.languageService.translateSignal('aiPage.globalBalance');
   protected readonly summaryText = this.languageService.translateSignal('aiPage.summaryText');
@@ -343,7 +338,7 @@ export class AiPage implements AfterViewInit {
     });
   }
 
-  protected async ask(question: string): Promise<void> {
+  protected ask(question: string): void {
     const text = question.trim();
     if (!text || this.typing()) {
       return;
@@ -351,13 +346,27 @@ export class AiPage implements AfterViewInit {
     this.question.set('');
     this.messages.update((list) => [...list, { id: makeId('m'), role: 'user', content: text }]);
     this.typing.set(true);
-    await new Promise((resolve) => setTimeout(resolve, 1100));
-    const reply = this.languageService.translate(generateReply(text));
-    this.messages.update((list) => [
-      ...list,
-      { id: makeId('m'), role: 'assistant', content: reply },
-    ]);
-    this.typing.set(false);
+    this.aiService.sendMessage(text).subscribe({
+      next: (reply) => {
+        this.messages.update((list) => [
+          ...list,
+          { id: makeId('m'), role: 'assistant', content: reply },
+        ]);
+        this.typing.set(false);
+      },
+      error: (err) => {
+        console.error('AI chat request failed', err);
+        this.messages.update((list) => [
+          ...list,
+          {
+            id: makeId('m'),
+            role: 'assistant',
+            content: this.languageService.translate('aiPage.chatError'),
+          },
+        ]);
+        this.typing.set(false);
+      },
+    });
   }
 
   protected submit(): void {

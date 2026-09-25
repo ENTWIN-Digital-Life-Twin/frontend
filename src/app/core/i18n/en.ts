@@ -860,6 +860,9 @@ export const EN_TRANSLATIONS = {
     globalBalance: 'Your global balance',
     summaryText:
       'Your day is overall well balanced. The main levers for improvement are hydration and the overdue task. A break after lunch would support your afternoon focus.',
+    noInsightsYet:
+      'Not enough data yet to generate insights. Log your sleep, hydration, or tasks to get started.',
+    chatError: 'Sorry, I couldn’t get a reply right now. Please try again in a moment.',
     categories: {
       productivity: 'Productivity',
       wellness: 'Well-being',
