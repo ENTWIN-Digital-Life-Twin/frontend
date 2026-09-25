@@ -482,8 +482,12 @@ export const EN_TRANSLATIONS = {
     },
     sidebar: {
       planDay: 'Plan my day',
+      refresh: 'Refresh planning',
       addEntry: 'Add an item',
       today: 'Today',
+      tasks: 'Tasks',
+      events: 'Events',
+      freeTime: 'Free time',
       dayLoad: 'Day load',
       categoriesTitle: 'Category overview',
       noActivity: 'No activity planned for this day.',
@@ -1408,6 +1412,7 @@ export const EN_TRANSLATIONS = {
     entryTypeBreak: 'Break',
     entryTypeSport: 'Sport',
     entryTypeFree: 'Free time',
+    untitled: 'Untitled',
   },
   tasksExtended: {
     detailOpenAria: 'Open details of ',

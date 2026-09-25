@@ -46,12 +46,15 @@ import type { LucideIcon } from '@lucide/angular';
           <span class="flex h-8 w-8 items-center justify-center rounded-panel bg-primary/10 text-primary">
             <svg lucideListChecks class="h-4 w-4" aria-hidden="true"></svg>
           </span>
-          <h3 class="font-display text-sm font-semibold text-primary">{{ todayTitle() }}</h3>
+          <div>
+            <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-muted">{{ todayEyebrow() }}</p>
+            <h3 class="font-display text-sm font-semibold text-primary">{{ todayTitle() }}</h3>
+          </div>
         </div>
 
-        <dl class="mt-3 space-y-2 text-xs">
-          <div class="flex items-center justify-between gap-2">
-            <dt class="flex items-center gap-1.5 text-ink-muted">
+        <dl class="mt-4 space-y-3 text-xs">
+          <div class="flex items-center justify-between gap-2 rounded-panel bg-surface-muted/60 px-2.5 py-2">
+            <dt class="flex items-center gap-1.5 font-medium text-ink-muted">
               <svg lucideTarget class="h-3.5 w-3.5" aria-hidden="true"></svg>
               {{ tasks() }}
             </dt>
@@ -59,15 +62,15 @@ import type { LucideIcon } from '@lucide/angular';
               {{ summary().doneTasks }}/{{ summary().totalTasks }}
             </dd>
           </div>
-          <div class="flex items-center justify-between gap-2">
-            <dt class="flex items-center gap-1.5 text-ink-muted">
+          <div class="flex items-center justify-between gap-2 rounded-panel bg-surface-muted/60 px-2.5 py-2">
+            <dt class="flex items-center gap-1.5 font-medium text-ink-muted">
               <svg lucideCalendarDays class="h-3.5 w-3.5" aria-hidden="true"></svg>
               {{ events() }}
             </dt>
             <dd class="font-semibold tabular-nums text-primary">{{ summary().totalEvents }}</dd>
           </div>
-          <div class="flex items-center justify-between gap-2">
-            <dt class="flex items-center gap-1.5 text-ink-muted">
+          <div class="flex items-center justify-between gap-2 rounded-panel bg-surface-muted/60 px-2.5 py-2">
+            <dt class="flex items-center gap-1.5 font-medium text-ink-muted">
               <svg lucideTimer class="h-3.5 w-3.5" aria-hidden="true"></svg>
               {{ freeTime() }}
             </dt>
@@ -125,6 +128,7 @@ export class PlanningSidebar {
 
   protected readonly refreshPlanning = this.languageService.translateSignal('planning.sidebar.refresh');
   protected readonly addEntry = this.languageService.translateSignal('planning.sidebar.addEntry');
+  protected readonly todayEyebrow = this.languageService.translateSignal('planningExtended.overview');
   protected readonly todayTitle = this.languageService.translateSignal('planning.sidebar.today');
   protected readonly tasks = this.languageService.translateSignal('planning.sidebar.tasks');
   protected readonly events = this.languageService.translateSignal('planning.sidebar.events');

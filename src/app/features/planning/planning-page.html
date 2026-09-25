@@ -15,16 +15,16 @@
       </section>
     } @else {
       <div class="grid min-w-0 gap-7 xl:grid-cols-[minmax(0,1fr)_320px] xl:gap-8">
-        <main class="min-w-0 space-y-7">
-          <app-planning-summary />
-          <app-planning-week />
+        <main class="min-w-0 flex flex-col gap-8 lg:gap-10">
+          <app-planning-summary class="block" />
+          <app-planning-week class="block" />
 
           <section class="flex flex-col gap-4 rounded-card border border-line bg-surface p-4 shadow-soft sm:p-5 lg:flex-row lg:items-center lg:justify-between">
             <app-planning-filters class="min-w-0 flex-1" />
             <app-planning-quick-actions class="shrink-0" (create)="onQuickAction($event)" />
           </section>
 
-          <app-planning-timeline (edit)="onEdit($event)" />
+          <app-planning-timeline class="block" (edit)="onEdit($event)" />
         </main>
 
         <app-planning-sidebar

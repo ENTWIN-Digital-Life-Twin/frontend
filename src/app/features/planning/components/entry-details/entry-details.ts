@@ -235,19 +235,22 @@ export class EntryDetails {
   }
 
   protected entryTitle(entry: PlanningEntry | null): string {
-    return entry ? this.languageService.translate(entry.title) : '';
+    if (!entry) {
+      return '';
+    }
+    return entry.title?.trim() || this.t('planningExtended.untitled');
   }
 
   protected entryDesc(entry: PlanningEntry): string {
-    return entry.description ? this.languageService.translate(entry.description) : '';
+    return entry.description?.trim() ?? '';
   }
 
   protected entryLocation(entry: PlanningEntry): string {
-    return entry.location ? this.languageService.translate(entry.location) : '';
+    return entry.location?.trim() ?? '';
   }
 
   protected participantName(name: string): string {
-    return this.languageService.translate(name);
+    return name;
   }
 
   protected minutesLabel(minutes: number): string {

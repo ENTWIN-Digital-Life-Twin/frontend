@@ -139,6 +139,7 @@ export class PlanningService {
           }),
         ),
         tap((response) => {
+          console.log('Planning loaded for date', this.selectedDate(), response);
           this.entries.set([
             ...response.tasks.map((task) => this.fromTask(task)),
             ...response.events.map((event) => this.fromEvent(event)),

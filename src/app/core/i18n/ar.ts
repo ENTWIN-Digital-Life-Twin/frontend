@@ -477,8 +477,12 @@ export const AR_TRANSLATIONS = {
     },
     sidebar: {
       planDay: 'خطط ليومي',
+      refresh: 'تحديث التخطيط',
       addEntry: 'إضافة عنصر',
       today: 'اليوم',
+      tasks: 'المهام',
+      events: 'الأحداث',
+      freeTime: 'وقت حر',
       dayLoad: 'عبء اليوم',
       categoriesTitle: 'نظرة على الفئات',
       noActivity: 'لا توجد أنشطة مجدولة لهذا اليوم.',
@@ -1395,6 +1399,7 @@ export const AR_TRANSLATIONS = {
     entryTypeBreak: 'استراحة',
     entryTypeSport: 'رياضة',
     entryTypeFree: 'وقت حر',
+    untitled: 'بدون عنوان',
   },
   tasksExtended: {
     detailOpenAria: 'فتح تفاصيل ',

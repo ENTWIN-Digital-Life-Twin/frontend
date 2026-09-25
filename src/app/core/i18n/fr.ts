@@ -483,8 +483,12 @@ export const FR_TRANSLATIONS = {
     },
     sidebar: {
       planDay: 'Planifier ma journée',
+      refresh: 'Actualiser le planning',
       addEntry: 'Ajouter un élément',
       today: 'Aujourd’hui',
+      tasks: 'Tâches',
+      events: 'Événements',
+      freeTime: 'Temps libre',
       dayLoad: 'Charge de la journée',
       categoriesTitle: 'Aperçu des catégories',
       noActivity: 'Aucune activité planifiée ce jour.',
@@ -1419,6 +1423,7 @@ export const FR_TRANSLATIONS = {
     entryTypeBreak: 'Pause',
     entryTypeSport: 'Sport',
     entryTypeFree: 'Temps libre',
+    untitled: 'Sans titre',
   },
   tasksExtended: {
     detailOpenAria: 'Ouvrir le détail de ',

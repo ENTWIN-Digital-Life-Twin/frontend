@@ -185,14 +185,14 @@ export class TimelineItem {
   }
 
   protected entryTitle(entry: PlanningEntry): string {
-    return this.languageService.translate(entry.title);
+    return entry.title?.trim() || this.t('planningExtended.untitled');
   }
 
   protected entryDesc(entry: PlanningEntry): string {
-    return entry.description ? this.languageService.translate(entry.description) : '';
+    return entry.description?.trim() ?? '';
   }
 
   protected entryLocation(entry: PlanningEntry): string {
-    return entry.location ? this.languageService.translate(entry.location) : '';
+    return entry.location?.trim() ?? '';
   }
 }

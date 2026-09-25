@@ -7,6 +7,12 @@
   box-sizing: border-box;
 }
 
+app-planning-summary,
+app-planning-week,
+app-planning-timeline {
+  display: block;
+}
+
 @media (max-width: 639px) {
   .planning-page {
     padding-inline: 1rem;
