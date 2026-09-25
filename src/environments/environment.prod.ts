@@ -1,5 +1,5 @@
 export const environment = {
-  production: false,
+  production: true,
   authApiUrl: '/api',
   planningApiUrl: '/api/v1',
   wellnessApiUrl: '/api/v1',

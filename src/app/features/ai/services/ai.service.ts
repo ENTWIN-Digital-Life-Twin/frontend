@@ -156,19 +156,28 @@ export class AiService {
       .pipe(map((res) => res.answer || res.reply || ''));
   }
 
-  private signalsFrom(summary: WeeklyWellnessSummary | null): Record<string, number> | null {
+  private signalsFrom(summary: WeeklyWellnessSummary | null): {
+    averageSleepMinutes?: number;
+    averageHydrationMl?: number;
+    weeklyWorkoutMinutes?: number;
+    averageStress?: number;
+    averageFatigue?: number;
+    averageMood?: number;
+    averageDailySteps?: number;
+  } | null {
     if (!summary) {
       return null;
     }
-    const payload: Record<string, number> = {};
-    if (summary.averageSleepMinutes != null) payload['averageSleepMinutes'] = summary.averageSleepMinutes;
-    if (summary.averageHydrationMl != null) payload['averageHydrationMl'] = summary.averageHydrationMl;
-    if (summary.totalWorkoutMinutes != null) payload['weeklyWorkoutMinutes'] = summary.totalWorkoutMinutes;
-    if (summary.averageStress != null) payload['averageStress'] = summary.averageStress;
-    if (summary.averageFatigue != null) payload['averageFatigue'] = summary.averageFatigue;
-    if (summary.averageMood != null) payload['averageMood'] = summary.averageMood;
-    if (summary.averageDailySteps != null) payload['averageDailySteps'] = summary.averageDailySteps;
-    return Object.keys(payload).length ? payload : null;
+    const payload = {
+      averageSleepMinutes: summary.averageSleepMinutes ?? undefined,
+      averageHydrationMl: summary.averageHydrationMl ?? undefined,
+      weeklyWorkoutMinutes: summary.totalWorkoutMinutes ?? undefined,
+      averageStress: summary.averageStress ?? undefined,
+      averageFatigue: summary.averageFatigue ?? undefined,
+      averageMood: summary.averageMood ?? undefined,
+      averageDailySteps: summary.averageDailySteps ?? undefined,
+    };
+    return Object.values(payload).some((value) => value != null) ? payload : null;
   }
 
   private toInsights(
