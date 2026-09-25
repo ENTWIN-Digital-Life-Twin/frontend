@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { LoginComponent } from './login.component';
@@ -11,7 +11,7 @@ describe('LoginComponent', () => {
   let component: LoginComponent;
   let fixture: ComponentFixture<LoginComponent>;
   let mockAuthService: any;
-  let mockRouter: any;
+  let mockRouter: Router;
   let mockLanguageService: any;
 
   beforeEach(async () => {
@@ -20,23 +20,27 @@ describe('LoginComponent', () => {
       login: vi.fn(),
       setCurrentUser: vi.fn(),
     };
-    mockRouter = {
-      navigate: vi.fn(),
-    };
     mockLanguageService = {
-      translate: vi.fn().mockReturnValue('Translated'),
+      translate: vi.fn((key: string) =>
+        key === 'auth.brand.stories' || key === 'auth.brand.stats' ? [] : 'Translated',
+      ),
       translateSignal: vi.fn().mockReturnValue(() => 'Translated'),
+      activeLanguage: vi.fn().mockReturnValue('en'),
+      languageOptions: [],
+      setLanguage: vi.fn(),
     };
 
     await TestBed.configureTestingModule({
       imports: [LoginComponent, ReactiveFormsModule],
       providers: [
+        provideRouter([]),
         { provide: AuthService, useValue: mockAuthService },
-        { provide: Router, useValue: mockRouter },
         { provide: LanguageService, useValue: mockLanguageService },
       ],
     }).compileComponents();
 
+    mockRouter = TestBed.inject(Router);
+    vi.spyOn(mockRouter, 'navigate').mockResolvedValue(true);
     fixture = TestBed.createComponent(LoginComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
