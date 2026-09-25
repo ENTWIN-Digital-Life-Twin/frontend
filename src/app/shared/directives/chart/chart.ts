@@ -24,7 +24,7 @@ function loadChartJs(): Promise<typeof import('chart.js/auto')> {
   selector: 'canvas[appChart]',
 })
 export class ChartDirective implements AfterViewInit, OnDestroy {
-  readonly config = input.required<ChartConfiguration>();
+  readonly config = input.required<unknown>();
 
   private readonly host = inject<ElementRef<HTMLCanvasElement>>(ElementRef);
   private chart: InstanceType<typeof import('chart.js/auto')['Chart']> | null = null;
@@ -36,7 +36,7 @@ export class ChartDirective implements AfterViewInit, OnDestroy {
       if (!chart) {
         return;
       }
-      const resolved = this.resolveTokens(this.config());
+      const resolved = this.resolveTokens(this.chartConfig());
       chart.data = resolved.data;
       if (resolved.options) {
         chart.options = resolved.options;
@@ -47,14 +47,14 @@ export class ChartDirective implements AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     loadChartJs().then(({ Chart }) => {
-      this.chart = new Chart(this.host.nativeElement, this.resolveTokens(this.config()));
+      this.chart = new Chart(this.host.nativeElement, this.resolveTokens(this.chartConfig()));
 
       this.themeObserver = new MutationObserver(() => {
         const chart = this.chart;
         if (!chart) {
           return;
         }
-        chart.options = this.resolveTokens(this.config()).options ?? chart.options;
+        chart.options = this.resolveTokens(this.chartConfig()).options ?? chart.options;
         chart.update();
       });
       this.themeObserver.observe(document.documentElement, {
@@ -69,6 +69,10 @@ export class ChartDirective implements AfterViewInit, OnDestroy {
     this.themeObserver = null;
     this.chart?.destroy();
     this.chart = null;
+  }
+
+  private chartConfig(): ChartConfiguration {
+    return this.config() as ChartConfiguration;
   }
 
   /** Replaces `var(--token)` references with their resolved values so chart

@@ -209,6 +209,20 @@ export const AR_TRANSLATIONS = {
   dashboard: {
     greeting: 'مرحباً، {{name}} 👋',
     subtitle: 'إليك نظرة عامة على يومك.',
+    user: 'المستخدم',
+    statusBalanced: 'الجدول متوازن',
+    statusOverloaded: 'الجدول مزدحم',
+    changeFromYesterday: '{{value}}٪ مقارنة بالأمس',
+    occupiedTime: 'الوقت المجدول',
+    viewAll: 'عرض الكل',
+    viewCalendar: 'عرض التقويم',
+    noTimeline: 'لا يوجد شيء مجدول اليوم.',
+    noUpcoming: 'لا توجد أحداث قادمة اليوم.',
+    noWellness: 'لم تُسجل بيانات عافية اليوم.',
+    noChartData: 'لا تتوفر بيانات لهذه الفترة.',
+    loadError: 'تعذر تحميل هذه المعلومات.',
+    openAssistant: 'افتح تحليلاتك أو اطلب مساعدة المساعد بناءً على بيانات التطبيق الفعلية.',
+    weeklyAverageValue: 'المتوسط {{value}}٪',
     balanced: 'يومك متوازن بشكل جيد',
     quickActions: {
       newTask: 'مهمة جديدة',
@@ -271,6 +285,8 @@ export const AR_TRANSLATIONS = {
       daysShort: ['إث', 'ث', 'أر', 'خ', 'ج', 'س', 'أح'],
       sleep: 'النوم',
       hydration: 'الترطيب',
+      activity: 'النشاط',
+      nutrition: 'التغذية',
       wellbeing: 'الرفاهية',
     },
   },
@@ -833,6 +849,9 @@ export const AR_TRANSLATIONS = {
     globalBalance: 'توازنك العام',
     summaryText:
       'يومك متوازن بشكل جيد. أهم محاور التحسين هي الترطيب والمهمة المتأخرة. استراحة بعد الغداء ستدعم تركيزك بعد الظهر.',
+    noInsightsYet:
+      'لا توجد بيانات كافية حتى الآن لإنشاء رؤى. سجّل نومك أو ترطيبك أو مهامك للبدء.',
+    chatError: 'عذرًا، لم أتمكن من الحصول على رد الآن. حاول مرة أخرى بعد لحظات.',
     categories: {
       productivity: 'الإنتاجية',
       wellness: 'الرفاهية',

@@ -1,7 +1,7 @@
 import { Component, computed, inject } from '@angular/core';
 import { LucideTrendingDown, LucideWind } from '@lucide/angular';
 import { LanguageService } from '../../../../core/services/language.service';
-import { MOCK_METRICS_30, type FatigueLevel } from '../../models/wellness.models';
+import { type FatigueLevel } from '../../models/wellness.models';
 import { WellnessService } from '../../services/wellness.service';
 
 const FATIGUE_HEIGHT: Record<FatigueLevel, number> = { low: 28, moderate: 52, high: 78 };
@@ -61,9 +61,9 @@ export class FatigueCard {
   protected readonly last7Days = this.languageService.translateSignal('wellness.fatigueCard.last7Days');
 
   protected readonly bars = computed(() =>
-    MOCK_METRICS_30.slice(-7).map((metric, index) => ({
+    this.service.last7Days().map((metric, index, list) => ({
       height: FATIGUE_HEIGHT[metric.fatigue],
-      today: index === 6,
+      today: index === list.length - 1,
     })),
   );
 }

@@ -1,4 +1,6 @@
-import { Injectable, computed, effect, signal } from '@angular/core';
+import { Injectable, computed, effect, inject, signal } from '@angular/core';
+import { Observable, of, tap } from 'rxjs';
+import { AuthService } from '../../../core/services/auth/auth.service';
 
 export type ThemePreference = 'light' | 'dark' | 'system';
 export type AccentPreference = 'teal' | 'navy';
@@ -65,10 +67,10 @@ export const STORAGE_KEY = 'digital-life-twin-settings';
 function defaults(): SettingsState {
   return {
     profile: {
-      firstName: 'Sarah',
-      lastName: 'Martin',
-      email: 'sarah.martin@example.com',
-      timezone: 'Europe/Paris',
+      firstName: '',
+      lastName: '',
+      email: '',
+      timezone: 'Africa/Casablanca',
       language: 'fr',
     },
     appearance: {
@@ -85,7 +87,7 @@ function defaults(): SettingsState {
     },
     preferences: {
       language: 'fr',
-      timezone: 'Europe/Paris',
+      timezone: 'Africa/Casablanca',
       dateFormat: 'long',
       weekStart: 'monday',
     },
@@ -132,6 +134,7 @@ function read(): SettingsState {
  */
 @Injectable({ providedIn: 'root' })
 export class SettingsService {
+  private readonly auth = inject(AuthService);
   private readonly stateSignal = signal<SettingsState>(read());
   readonly state = this.stateSignal.asReadonly();
 
@@ -145,6 +148,29 @@ export class SettingsService {
   });
 
   constructor() {
+    effect(() => {
+      const profile = this.auth.profile();
+      const user = this.auth.currentUser();
+      if (!profile && !user) {
+        return;
+      }
+      this.stateSignal.update((current) => ({
+        ...current,
+        profile: {
+          firstName: profile?.firstName || user?.firstName || current.profile.firstName,
+          lastName: profile?.lastName || user?.lastName || current.profile.lastName,
+          email: profile?.email || user?.email || current.profile.email,
+          timezone: profile?.timezone || current.profile.timezone,
+          language: profile?.preferredLanguage || current.profile.language,
+        },
+        preferences: {
+          ...current.preferences,
+          language: (profile?.preferredLanguage as LanguageCode) || current.preferences.language,
+          timezone: (profile?.timezone as TimezoneCode) || current.preferences.timezone,
+        },
+      }));
+    }, { allowSignalWrites: true });
+
     effect(() => {
       const state = this.stateSignal();
       const root = document.documentElement;
@@ -227,8 +253,31 @@ export class SettingsService {
 
   // ----------------------------------------------------------------- Compte
 
-  saveProfile(profile: ProfileSettings): void {
+  saveProfile(profile: ProfileSettings): Observable<unknown> {
     this.patch({ profile });
+    if (!this.auth.currentUser()) {
+      return of(null);
+    }
+    return this.auth
+      .updateProfile({
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        preferredLanguage: profile.language,
+        timezone: profile.timezone,
+      })
+      .pipe(tap(() => this.patch({ profile })));
+  }
+
+  persistLocale(language?: LanguageCode, timezone?: TimezoneCode): void {
+    if (!this.auth.currentUser()) {
+      return;
+    }
+    this.auth
+      .updateProfile({
+        preferredLanguage: language ?? this.stateSignal().preferences.language,
+        timezone: timezone ?? this.stateSignal().preferences.timezone,
+      })
+      .subscribe({ error: () => void 0 });
   }
 
   // ------------------------------------------------------------------ Export

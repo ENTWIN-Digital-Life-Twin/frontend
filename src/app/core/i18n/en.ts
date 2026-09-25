@@ -209,6 +209,20 @@ export const EN_TRANSLATIONS = {
   dashboard: {
     greeting: 'Hello, {{name}} 👋',
     subtitle: 'Here is your daily overview.',
+    user: 'User',
+    statusBalanced: 'Schedule balanced',
+    statusOverloaded: 'Schedule overloaded',
+    changeFromYesterday: '{{value}}% vs yesterday',
+    occupiedTime: 'Scheduled time',
+    viewAll: 'View all',
+    viewCalendar: 'View calendar',
+    noTimeline: 'Nothing is scheduled for today.',
+    noUpcoming: 'No upcoming events today.',
+    noWellness: 'No wellness data has been recorded today.',
+    noChartData: 'No data is available for this period.',
+    loadError: 'This information could not be loaded.',
+    openAssistant: 'Open your analyses or ask the assistant for help based on your real application data.',
+    weeklyAverageValue: 'Average {{value}}%',
     balanced: 'Your day is well balanced',
     quickActions: {
       newTask: 'New task',
@@ -271,6 +285,8 @@ export const EN_TRANSLATIONS = {
       daysShort: ['M', 'T', 'W', 'T', 'F', 'S', 'S'],
       sleep: 'Sleep',
       hydration: 'Hydration',
+      activity: 'Activity',
+      nutrition: 'Nutrition',
       wellbeing: 'Well-being',
     },
   },
@@ -844,6 +860,9 @@ export const EN_TRANSLATIONS = {
     globalBalance: 'Your global balance',
     summaryText:
       'Your day is overall well balanced. The main levers for improvement are hydration and the overdue task. A break after lunch would support your afternoon focus.',
+    noInsightsYet:
+      'Not enough data yet to generate insights. Log your sleep, hydration, or tasks to get started.',
+    chatError: 'Sorry, I couldn’t get a reply right now. Please try again in a moment.',
     categories: {
       productivity: 'Productivity',
       wellness: 'Well-being',

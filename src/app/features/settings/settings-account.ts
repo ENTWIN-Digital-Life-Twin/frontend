@@ -122,6 +122,7 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 [appInputInvalid]="!!emailError()"
                 [ngModel]="draft().email"
                 name="email"
+                readonly
                 (ngModelChange)="patchDraft({ email: $event })"
               />
             </app-field>
@@ -236,10 +237,17 @@ export class SettingsAccount {
     if (this.firstNameError() || this.lastNameError() || this.emailError()) {
       return;
     }
-    this.service.saveProfile(this.draft());
-    this.submitted.set(false);
-    this.toastTone.set('success');
-    this.toast.set(this.t('settings.account.toastUpdated'));
+    this.service.saveProfile(this.draft()).subscribe({
+      next: () => {
+        this.submitted.set(false);
+        this.toastTone.set('success');
+        this.toast.set(this.t('settings.account.toastUpdated'));
+      },
+      error: () => {
+        this.toastTone.set('primary');
+        this.toast.set(this.t('settings.account.toastUpdated'));
+      },
+    });
   }
 
   protected resetDraft(): void {

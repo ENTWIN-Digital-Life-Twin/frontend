@@ -1,6 +1,7 @@
 import { inject } from '@angular/core';
 import { Router, type CanActivateFn } from '@angular/router';
 import { AuthService } from '../services/auth/auth.service';
+import { LanguageService } from '../services/language.service';
 
 /**
  * Protects authenticated application routes only.
@@ -9,11 +10,12 @@ import { AuthService } from '../services/auth/auth.service';
  */
 export const authGuard: CanActivateFn = () => {
   const authService = inject(AuthService);
+  const languageService = inject(LanguageService);
   const router = inject(Router);
 
-  if (authService.currentUser()) {
-    return true;
+  if (!authService.currentUser()) {
+    return router.createUrlTree(['/login']);
   }
 
-  return router.createUrlTree(['/login']);
+  return languageService.ensureActiveLanguageLoaded().then(() => true);
 };

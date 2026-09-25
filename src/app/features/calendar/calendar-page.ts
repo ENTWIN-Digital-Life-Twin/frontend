@@ -1,4 +1,5 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { LucideRotateCcw, LucideSearch } from '@lucide/angular';
 import { LanguageService } from '../../core/services/language.service';
@@ -128,9 +129,10 @@ import { CalendarService } from './services/calendar.service';
     }
   `,
 })
-export class CalendarPage {
+export class CalendarPage implements OnInit {
   protected readonly service = inject(CalendarService);
   private readonly languageService = inject(LanguageService);
+  private readonly route = inject(ActivatedRoute);
 
   protected readonly modalOpen = signal(false);
   protected readonly editing = signal<CalendarEvent | null>(null);
@@ -180,6 +182,12 @@ export class CalendarPage {
       count: String(count),
     });
   });
+
+  ngOnInit(): void {
+    if (this.route.snapshot.queryParamMap.get('create') === 'true') {
+      this.onCreate();
+    }
+  }
 
   protected onCreate(): void {
     this.editing.set(null);

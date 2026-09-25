@@ -1,5 +1,8 @@
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import type { ChartConfiguration, TooltipItem } from 'chart.js/auto';
+import { forkJoin } from 'rxjs';
+import { environment } from '../../../../environments/environment';
 import { LanguageService } from '../../../core/services/language.service';
 import {
   DAILY_CALORIE_GOAL,
@@ -9,9 +12,6 @@ import {
   DAILY_WATER_GOAL_ML,
   MEAL_SLOTS,
   MEAL_TYPES,
-  MOCK_30_DAYS,
-  MOCK_MEALS,
-  MOCK_WATER_ENTRIES,
   dayKey,
   formatGrams,
   formatKcal,
@@ -36,18 +36,231 @@ const TEAL_200 = '#B5E3E3';
 const INK_FAINT = '#8494A3';
 const INK_MUTED = '#52616F';
 
-const WEEK_CALORIES = [1650, 1720, 1680, 1750, 1580, 1820, 1760];
-const WEEK_PROTEIN = [78, 85, 82, 90, 72, 88, 92];
-const WEEK_HYDRATION = [1500, 1800, 1700, 1600, 1900, 1400, 2000];
+type BackendMealType = 'BREAKFAST' | 'LUNCH' | 'DINNER' | 'SNACK' | 'OTHER';
+type BackendBeverageType = 'WATER' | 'TEA' | 'COFFEE' | 'JUICE' | 'OTHER';
+
+interface MealResponse {
+  id: string;
+  userId: string;
+  mealType: BackendMealType;
+  description: string;
+  mealTime: string;
+  totalCalories: number | null;
+  proteinGrams: number | null;
+  carbohydrateGrams: number | null;
+  fatGrams: number | null;
+  fibreGrams: number | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface WaterResponse {
+  id: string;
+  userId: string;
+  quantityMl: number;
+  consumedAt: string;
+  beverageType: BackendBeverageType;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface PageResponse<T> {
+  content: T[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+}
+
+const MEAL_TYPE_TO_BACKEND: Record<MealType, BackendMealType> = {
+  breakfast: 'BREAKFAST',
+  lunch: 'LUNCH',
+  snack: 'SNACK',
+  dinner: 'DINNER',
+};
+
+const MEAL_TYPE_FROM_BACKEND: Record<BackendMealType, MealType> = {
+  BREAKFAST: 'breakfast',
+  LUNCH: 'lunch',
+  SNACK: 'snack',
+  DINNER: 'dinner',
+  OTHER: 'snack',
+};
+
+// wellness-service's Meal entity has a single free-text `notes` column, but this UI keeps a
+// distinct list of foods and a separate notes field. Pack both into that one column.
+const FOODS_PREFIX = 'foods:';
+const FOODS_NOTES_SEPARATOR = '\n\n';
+
+function packMealNotes(foods: string[], notes?: string): string {
+  const foodsPart = foods.length ? `${FOODS_PREFIX}${foods.join('|')}` : '';
+  const notesPart = notes?.trim() ?? '';
+  if (foodsPart && notesPart) {
+    return `${foodsPart}${FOODS_NOTES_SEPARATOR}${notesPart}`;
+  }
+  return foodsPart || notesPart;
+}
+
+function unpackMealNotes(raw: string | null): { foods: string[]; notes: string | undefined } {
+  if (!raw) {
+    return { foods: [], notes: undefined };
+  }
+  const sepIdx = raw.indexOf(FOODS_NOTES_SEPARATOR);
+  const firstPart = sepIdx === -1 ? raw : raw.slice(0, sepIdx);
+  const rest = sepIdx === -1 ? '' : raw.slice(sepIdx + FOODS_NOTES_SEPARATOR.length);
+  if (firstPart.startsWith(FOODS_PREFIX)) {
+    return {
+      foods: firstPart.slice(FOODS_PREFIX.length).split('|').filter(Boolean),
+      notes: rest || undefined,
+    };
+  }
+  return { foods: [], notes: raw };
+}
+
+const pad2 = (value: number): string => String(value).padStart(2, '0');
+
+function todayAt(time: string): string {
+  const [hour, minute] = time.split(':').map(Number);
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, minute).toISOString();
+}
+
+function timeOf(iso: string): string {
+  const dt = new Date(iso);
+  return `${pad2(dt.getHours())}:${pad2(dt.getMinutes())}`;
+}
+
+function startOfDayIso(date: Date): string {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString();
+}
+
+function endOfDayIso(date: Date): string {
+  const d = new Date(date);
+  d.setHours(23, 59, 59, 999);
+  return d.toISOString();
+}
+
+function fromMealResponse(res: MealResponse): Meal {
+  const { foods, notes } = unpackMealNotes(res.notes);
+  return {
+    id: res.id,
+    type: MEAL_TYPE_FROM_BACKEND[res.mealType],
+    name: res.description,
+    time: timeOf(res.mealTime),
+    foods,
+    calories: Math.round(res.totalCalories ?? 0),
+    protein: Math.round(res.proteinGrams ?? 0),
+    carbs: Math.round(res.carbohydrateGrams ?? 0),
+    fat: Math.round(res.fatGrams ?? 0),
+    notes,
+  };
+}
+
+function toMealRequest(meal: Omit<Meal, 'id'>): Record<string, unknown> {
+  return {
+    mealType: MEAL_TYPE_TO_BACKEND[meal.type],
+    description: meal.name,
+    mealTime: todayAt(meal.time),
+    totalCalories: meal.calories,
+    proteinGrams: meal.protein,
+    carbohydrateGrams: meal.carbs,
+    fatGrams: meal.fat,
+    fibreGrams: 0,
+    notes: packMealNotes(meal.foods, meal.notes),
+  };
+}
+
+function fromWaterResponse(res: WaterResponse): WaterEntry {
+  return { id: res.id, time: timeOf(res.consumedAt), ml: res.quantityMl };
+}
 
 @Injectable({ providedIn: 'root' })
 export class NutritionService {
   private readonly languageService = inject(LanguageService);
+  private readonly http = inject(HttpClient);
+  private readonly mealsUrl = `${environment.wellnessApiUrl}/wellness/meals`;
+  private readonly waterUrl = `${environment.wellnessApiUrl}/wellness/water`;
 
   readonly period = signal<NutritionPeriod>('today');
   readonly weeklyMetric = signal<WeeklyMetric>('calories');
-  readonly meals = signal<Meal[]>(MOCK_MEALS.map((m) => ({ ...m, foods: [...m.foods] })));
-  readonly waterEntries = signal<WaterEntry[]>([...MOCK_WATER_ENTRIES]);
+  readonly meals = signal<Meal[]>([]);
+  readonly waterEntries = signal<WaterEntry[]>([]);
+  private readonly rangeDaysSignal = signal<DayNutrition[]>([]);
+
+  constructor() {
+    this.refreshToday();
+    this.refreshRange();
+  }
+
+  private refreshToday(): void {
+    const from = startOfDayIso(offsetDays(0));
+    const to = endOfDayIso(offsetDays(0));
+    const params = new HttpParams()
+      .set('from', from)
+      .set('to', to)
+      .set('page', '0')
+      .set('size', '50');
+
+    this.http.get<PageResponse<MealResponse>>(this.mealsUrl, { params }).subscribe({
+      next: (page) => this.meals.set(page.content.map(fromMealResponse)),
+      error: (err) => {
+        console.error('Failed to load meals', err);
+        this.meals.set([]);
+      },
+    });
+
+    this.http.get<PageResponse<WaterResponse>>(this.waterUrl, { params }).subscribe({
+      next: (page) => this.waterEntries.set(page.content.map(fromWaterResponse)),
+      error: (err) => {
+        console.error('Failed to load water entries', err);
+        this.waterEntries.set([]);
+      },
+    });
+  }
+
+  /** Fetches raw meal + water records over the last `days` days and aggregates per calendar day. */
+  private refreshRange(days = 30): void {
+    const from = startOfDayIso(offsetDays(-(days - 1)));
+    const to = endOfDayIso(offsetDays(0));
+    const params = new HttpParams().set('from', from).set('to', to).set('page', '0').set('size', '500');
+
+    forkJoin([
+      this.http.get<PageResponse<MealResponse>>(this.mealsUrl, { params }),
+      this.http.get<PageResponse<WaterResponse>>(this.waterUrl, { params }),
+    ]).subscribe({
+      next: ([mealsPage, waterPage]) => {
+        const byDay = new Map<string, DayNutrition>();
+        for (let i = 0; i < days; i++) {
+          const date = dayKey(offsetDays(-(days - 1 - i)));
+          byDay.set(date, { date, calories: 0, protein: 0, hydrationMl: 0 });
+        }
+        for (const meal of mealsPage.content) {
+          const date = dayKey(new Date(meal.mealTime));
+          const day = byDay.get(date);
+          if (day) {
+            day.calories += Math.round(meal.totalCalories ?? 0);
+            day.protein += Math.round(meal.proteinGrams ?? 0);
+          }
+        }
+        for (const water of waterPage.content) {
+          const date = dayKey(new Date(water.consumedAt));
+          const day = byDay.get(date);
+          if (day) {
+            day.hydrationMl += water.quantityMl;
+          }
+        }
+        this.rangeDaysSignal.set([...byDay.values()]);
+      },
+      error: (err) => {
+        console.error('Failed to load nutrition history', err);
+        this.rangeDaysSignal.set([]);
+      },
+    });
+  }
 
   readonly mealsSorted = computed(() =>
     [...this.meals()].sort((a, b) => a.time.localeCompare(b.time)),
@@ -89,7 +302,8 @@ export class NutritionService {
 
   readonly caloriesDelta = computed(() => {
     const today = this.totalCalories();
-    const yesterday = MOCK_30_DAYS[MOCK_30_DAYS.length - 2]?.calories ?? today;
+    const days = this.rangeDaysSignal();
+    const yesterday = days[days.length - 2]?.calories ?? today;
     return today - yesterday;
   });
 
@@ -267,24 +481,63 @@ export class NutritionService {
   }
 
   addWater(ml: number): void {
+    const tempId = `temp-${Date.now()}`;
     const now = new Date();
-    const time = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-    this.waterEntries.update((entries) => [
-      ...entries,
-      { id: crypto.randomUUID(), time, ml },
-    ]);
+    const time = `${pad2(now.getHours())}:${pad2(now.getMinutes())}`;
+    this.waterEntries.update((entries) => [...entries, { id: tempId, time, ml }]);
+
+    this.http
+      .post<WaterResponse>(this.waterUrl, {
+        quantityMl: ml,
+        consumedAt: now.toISOString(),
+        beverageType: 'WATER',
+      })
+      .subscribe({
+        next: (res) => {
+          const created = fromWaterResponse(res);
+          this.waterEntries.update((entries) =>
+            entries.map((entry) => (entry.id === tempId ? created : entry)),
+          );
+        },
+        error: (err) => {
+          console.error('Failed to log water', err);
+          this.waterEntries.update((entries) => entries.filter((entry) => entry.id !== tempId));
+        },
+      });
   }
 
   addMeal(meal: Omit<Meal, 'id'>): void {
-    this.meals.update((list) => [...list, { ...meal, id: crypto.randomUUID() }]);
+    const tempId = `temp-${Date.now()}`;
+    this.meals.update((list) => [...list, { ...meal, id: tempId }]);
+
+    this.http.post<MealResponse>(this.mealsUrl, toMealRequest(meal)).subscribe({
+      next: (res) => {
+        const created = fromMealResponse(res);
+        this.meals.update((list) => list.map((item) => (item.id === tempId ? created : item)));
+      },
+      error: (err) => {
+        console.error('Failed to create meal', err);
+        this.meals.update((list) => list.filter((item) => item.id !== tempId));
+      },
+    });
   }
 
   updateMeal(id: string, meal: Meal): void {
     this.meals.update((list) => list.map((entry) => (entry.id === id ? { ...meal } : entry)));
+    this.http.put<MealResponse>(`${this.mealsUrl}/${id}`, toMealRequest(meal)).subscribe({
+      next: (res) => {
+        const updated = fromMealResponse(res);
+        this.meals.update((list) => list.map((item) => (item.id === id ? updated : item)));
+      },
+      error: (err) => console.error('Failed to update meal', err),
+    });
   }
 
   deleteMeal(id: string): void {
     this.meals.update((list) => list.filter((entry) => entry.id !== id));
+    this.http.delete(`${this.mealsUrl}/${id}`).subscribe({
+      error: (err) => console.error('Failed to delete meal', err),
+    });
   }
 
   private todayWeekIndex(): number {
@@ -292,31 +545,9 @@ export class NutritionService {
     return day === 0 ? 6 : day - 1;
   }
 
-  private weekValues(metric: WeeklyMetric): number[] {
-    const base =
-      metric === 'calories'
-        ? [...WEEK_CALORIES]
-        : metric === 'protein'
-          ? [...WEEK_PROTEIN]
-          : [...WEEK_HYDRATION];
-    base[this.todayWeekIndex()] =
-      metric === 'calories'
-        ? this.totalCalories()
-        : metric === 'protein'
-          ? this.totalProtein()
-          : this.waterTotal();
-    return base;
-  }
-
-  private liveDays(count: number): DayNutrition[] {
-    const base = MOCK_30_DAYS.slice(-count).map((day) => ({ ...day }));
-    base[base.length - 1] = {
-      date: dayKey(offsetDays(0)),
-      calories: this.totalCalories(),
-      protein: this.totalProtein(),
-      hydrationMl: this.waterTotal(),
-    };
-    return base;
+  private last7Days(): DayNutrition[] {
+    const days = this.rangeDaysSignal();
+    return days.slice(-7);
   }
 
   private niceMax(values: number[], step: number): number {
@@ -326,7 +557,10 @@ export class NutritionService {
 
   private buildWeekChart(metric: WeeklyMetric): ChartConfiguration<'bar'> {
     const today = this.todayWeekIndex();
-    const values = this.weekValues(metric);
+    const days = this.last7Days();
+    const values = days.map((day) =>
+      metric === 'calories' ? day.calories : metric === 'protein' ? day.protein : day.hydrationMl,
+    );
     const [base, highlight, step, tickLabel] = this.metricStyle(metric);
     return {
       type: 'bar',
@@ -348,7 +582,7 @@ export class NutritionService {
   }
 
   private buildRangeChart(metric: WeeklyMetric, count: number): ChartConfiguration<'bar'> {
-    const days = this.liveDays(count);
+    const days = this.rangeDaysSignal().slice(-count);
     const values = days.map((day) =>
       metric === 'calories' ? day.calories : metric === 'protein' ? day.protein : day.hydrationMl,
     );

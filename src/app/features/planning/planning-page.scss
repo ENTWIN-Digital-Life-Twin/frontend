@@ -1,0 +1,21 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.planning-page {
+  box-sizing: border-box;
+}
+
+@media (max-width: 639px) {
+  .planning-page {
+    padding-inline: 1rem;
+    padding-block: 1.25rem 2rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host * {
+    scroll-behavior: auto;
+  }
+}
