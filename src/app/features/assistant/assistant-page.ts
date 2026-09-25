@@ -8,12 +8,12 @@ import {
 } from '@lucide/angular';
 import { Button } from '../../shared/ui/button/button';
 import { LanguageService } from '../../core/services/language.service';
+import { AuthService } from '../../core/services/auth/auth.service';
+import { DashboardService } from '../../core/services/dashboard/dashboard.service';
+import { AiService } from '../ai/services/ai.service';
 import {
-  CONTEXT_ITEMS,
-  MOCK_CONVERSATIONS,
   SUGGESTED_QUESTION_KEYS,
   WELCOME_KEY,
-  assistantReply,
   type AssistantConversation,
   type AssistantMessage,
   type ContextItem,
@@ -34,12 +34,12 @@ function timeNow(locale: string): string {
   );
 }
 
-function welcomeMessage(locale: string): AssistantMessage {
+function welcomeMessage(locale: string, name: string): AssistantMessage {
   return {
     id: makeId('am'),
     role: 'assistant',
     contentKey: WELCOME_KEY,
-    contentVars: { name: 'Sarah' },
+    contentVars: { name },
     time: timeNow(locale),
   };
 }
@@ -220,11 +220,15 @@ function welcomeMessage(locale: string): AssistantMessage {
 export class AssistantPage implements AfterViewInit {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly languageService = inject(LanguageService);
+  private readonly auth = inject(AuthService);
+  private readonly ai = inject(AiService);
+  private readonly dashboard = inject(DashboardService);
 
   protected readonly TONE_DOT = TONE_DOT;
 
-  protected readonly conversations = signal<AssistantConversation[]>(MOCK_CONVERSATIONS);
-  protected readonly activeId = signal(MOCK_CONVERSATIONS[0]?.id ?? '');
+  private readonly initialConversation = this.createConversation();
+  protected readonly conversations = signal<AssistantConversation[]>([this.initialConversation]);
+  protected readonly activeId = signal(this.initialConversation.id);
   protected readonly draft = signal('');
   protected readonly typing = signal(false);
 
@@ -257,13 +261,43 @@ export class AssistantPage implements AfterViewInit {
     SUGGESTED_QUESTION_KEYS.map((key) => this.languageService.translate<string>(key)),
   );
 
-  protected readonly contextItems = computed(() =>
-    CONTEXT_ITEMS.map((item) => ({
+  protected readonly contextItems = computed(() => {
+    const stats = this.dashboard.stats();
+    const upcoming = this.dashboard.upcomingEvent();
+    const wellness = this.dashboard.wellness();
+    const items: ContextItem[] = [
+      {
+        labelKey: 'assistantPage.contextItems.productivity',
+        value: stats ? `${stats.productivityPercent} %` : '—',
+        tone: 'teal',
+      },
+      {
+        labelKey: 'assistantPage.contextItems.tasksDone',
+        value: stats ? `${stats.tasksCompleted} / ${stats.tasksTotal}` : '—',
+        tone: 'success',
+      },
+      {
+        labelKey: 'assistantPage.contextItems.nextEvent',
+        value: upcoming ? `${upcoming.time} · ${upcoming.title}` : '—',
+        tone: 'navy',
+      },
+      {
+        labelKey: 'assistantPage.contextItems.hydration',
+        value: wellness?.hydration.value ?? '—',
+        tone: 'warning',
+      },
+      {
+        labelKey: 'assistantPage.contextItems.freeTime',
+        value: stats ? this.formatMinutes(stats.freeMinutes) : '—',
+        tone: 'navy',
+      },
+    ];
+    return items.map((item) => ({
       tone: item.tone,
       label: this.languageService.translate(item.labelKey),
-      value: item.valueKey ? this.languageService.translate(item.valueKey) : (item.value ?? ''),
-    })),
-  );
+      value: item.value ?? '',
+    }));
+  });
 
   protected readonly localizedConversations = computed(() =>
     this.conversations().map((conversation) => ({
@@ -298,13 +332,7 @@ export class AssistantPage implements AfterViewInit {
   }
 
   protected newConversation(): void {
-    const locale = this.languageService.getLocale();
-    const conversation: AssistantConversation = {
-      id: `c-${Date.now()}`,
-      titleKey: 'assistantPage.newDiscussion',
-      updatedAt: new Date().toISOString(),
-      messages: [welcomeMessage(locale)],
-    };
+    const conversation = this.createConversation();
     this.conversations.update((list) => [conversation, ...list]);
     this.activeId.set(conversation.id);
   }
@@ -341,27 +369,16 @@ export class AssistantPage implements AfterViewInit {
       ),
     );
     this.typing.set(true);
-    await new Promise((resolve) => setTimeout(resolve, 1100));
-    const replyKey = assistantReply(text);
-    const replyText = this.languageService.translate(replyKey);
-    this.conversations.update((list) =>
-      list.map((item) =>
-        item.id === this.activeId()
-          ? {
-              ...item,
-              updatedAt: new Date().toISOString(),
-              messages: [
-                ...item.messages,
-                { id: makeId('m'), role: 'assistant', content: replyText, time: timeNow(this.languageService.getLocale()) },
-              ],
-            }
-          : item,
-      ),
-    );
-    this.typing.set(false);
+    this.ai.sendMessage(text).subscribe({
+      next: (replyText) => this.appendAssistant(replyText),
+      error: () => this.appendAssistant(this.languageService.translate('aiPage.chatError')),
+    });
   }
 
   ngAfterViewInit(): void {
+    if (this.dashboard.state().stats === 'idle') {
+      this.dashboard.loadAll();
+    }
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       return;
     }
@@ -373,5 +390,47 @@ export class AssistantPage implements AfterViewInit {
         { opacity: 1, y: 0, duration: 0.35, stagger: 0.04, ease: 'power2.out', clearProps: 'transform' },
       );
     });
+  }
+
+  private appendAssistant(replyText: string): void {
+    this.conversations.update((list) =>
+      list.map((item) =>
+        item.id === this.activeId()
+          ? {
+              ...item,
+              updatedAt: new Date().toISOString(),
+              messages: [
+                ...item.messages,
+                {
+                  id: makeId('m'),
+                  role: 'assistant',
+                  content: replyText,
+                  time: timeNow(this.languageService.getLocale()),
+                },
+              ],
+            }
+          : item,
+      ),
+    );
+    this.typing.set(false);
+  }
+
+  private createConversation(): AssistantConversation {
+    const locale = this.languageService.getLocale();
+    const name =
+      this.auth.currentUser()?.firstName ||
+      String(this.languageService.translate('assistantPage.newDiscussion'));
+    return {
+      id: `c-${Date.now()}`,
+      titleKey: 'assistantPage.newDiscussion',
+      updatedAt: new Date().toISOString(),
+      messages: [welcomeMessage(locale, name)],
+    };
+  }
+
+  private formatMinutes(minutes: number): string {
+    const hours = Math.floor(minutes / 60);
+    const rest = minutes % 60;
+    return `${hours} h ${String(rest).padStart(2, '0')}`;
   }
 }

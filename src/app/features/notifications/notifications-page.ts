@@ -302,28 +302,9 @@ export class NotificationsPage implements AfterViewInit {
     system: this.languageService.translate(NOTIFICATION_TYPE_KEYS.system),
   }));
 
-  protected readonly groups = computed(() =>
-    this.service.grouped().map((group) => ({
-      section: group.section,
-      items: group.items.map((item) => ({
-        ...item,
-        title: this.languageService.translate(item.titleKey),
-        message: this.languageService.translate(item.messageKey),
-      })),
-    })),
-  );
+  protected readonly groups = computed(() => this.service.grouped());
 
-  protected readonly selected = computed(() => {
-    const item = this.service.selected();
-    if (!item) {
-      return null;
-    }
-    return {
-      ...item,
-      title: this.languageService.translate(item.titleKey),
-      message: this.languageService.translate(item.messageKey),
-    };
-  });
+  protected readonly selected = computed(() => this.service.selected());
 
   protected sectionLabel(section: NotificationSection): string {
     return this.languageService.translate(`notifications.sections.${section}`);

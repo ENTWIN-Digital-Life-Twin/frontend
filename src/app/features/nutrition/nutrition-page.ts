@@ -213,9 +213,9 @@ interface MacroStat {
                     </span>
                     <span class="text-[11px] tabular-nums text-ink-faint">{{ meal.time }}</span>
                   </span>
-                  <span class="mt-0.5 block truncate text-sm font-semibold text-primary">{{ t(meal.name) }}</span>
+                  <span class="mt-0.5 block truncate text-sm font-semibold text-primary">{{ meal.name }}</span>
                   <span class="mt-0.5 block truncate text-xs text-ink-muted">
-                    {{ meal.foods.map(f => t(f)).join(' · ') }}
+                    {{ meal.foods.join(' · ') }}
                   </span>
                 </span>
                 <span class="shrink-0 text-right">
@@ -393,7 +393,7 @@ interface MacroStat {
               <li class="flex items-center justify-between rounded-panel border border-line bg-surface p-3">
                 <span class="flex items-center gap-2.5">
                   <span class="h-1.5 w-1.5 rounded-full bg-accent"></span>
-                   <span class="text-sm font-medium text-ink">{{ t(food.name) }}</span>
+                   <span class="text-sm font-medium text-ink">{{ food.name }}</span>
                 </span>
                 <span class="text-xs tabular-nums text-ink-muted">
                   {{ formatKcal(food.calories) }} kcal · {{ formatGrams(food.protein) }} {{ proteinShort() }}
@@ -558,10 +558,6 @@ export class NutritionPage implements AfterViewInit {
     }
     return [...count.values()].sort((a, b) => b.calories - a.calories).slice(0, 5);
   });
-
-  protected t(key: string): string {
-    return this.languageService.translate(key);
-  }
 
   protected readonly formOpen = signal(false);
   protected readonly editing = signal<Meal | null>(null);

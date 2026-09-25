@@ -65,9 +65,9 @@ export class AiWellnessInsight {
   protected readonly insight = computed(() => {
     const raw = this.service.insight();
     return {
-      title: this.languageService.translate(raw.titleKey),
-      message: this.languageService.translate(raw.messageKey),
-      recommendation: this.languageService.translate(raw.recommendationKey),
+      title: raw.title ?? this.languageService.translate(raw.titleKey),
+      message: raw.message ?? this.languageService.translate(raw.messageKey),
+      recommendation: raw.recommendation ?? this.languageService.translate(raw.recommendationKey),
       confidence: this.languageService.translate('wellness.insight.confidence', {
         value: String(raw.confidence),
       }),

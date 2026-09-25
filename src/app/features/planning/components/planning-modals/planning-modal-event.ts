@@ -115,20 +115,6 @@ import { ACTIONS, ERROR_TEXT, FIELD, GRID_2, INPUT, LABEL, TEXTAREA } from './fo
           />
         </div>
 
-        <div [class]="FIELD + ' mt-3'">
-          <label [class]="LABEL" for="event-participants">{{ t('eventForm.participants') }}</label>
-          <input
-            id="event-participants"
-            [class]="INPUT"
-            type="text"
-            [placeholder]="t('eventForm.participantsPlaceholder')"
-            autocomplete="off"
-            [ngModel]="participantsText()"
-            name="participants"
-            (ngModelChange)="participantsText.set($event)"
-          />
-        </div>
-
         @if (submitted() && !title().trim()) {
           <p [class]="ERROR_TEXT + ' mt-3'">{{ t('eventForm.titleRequired') }}</p>
         }

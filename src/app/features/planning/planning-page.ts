@@ -1,10 +1,11 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { LanguageService } from '../../core/services/language.service';
+import { Button } from '../../shared/ui/button/button';
 import { Toast, type ToastTone } from '../../shared/ui/toast/toast';
 import { EntryDetails } from './components/entry-details/entry-details';
 import { PlanningFilters } from './components/planning-filters/planning-filters';
 import { PlanningHeader } from './components/planning-header/planning-header';
-import { PlanningModalBlock } from './components/planning-modals/planning-modal-block';
 import { PlanningModalEvent } from './components/planning-modals/planning-modal-event';
 import { PlanningModalTask } from './components/planning-modals/planning-modal-task';
 import {
@@ -18,11 +19,12 @@ import { PlanningWeek } from './components/planning-week/planning-week';
 import type { PlanningEntry } from './models/planning.models';
 import { PlanningService } from './services/planning.service';
 
-type PlanningModal = 'task' | 'event' | 'block' | null;
+type PlanningModal = 'task' | 'event' | null;
 
 @Component({
   selector: 'app-planning-page',
   imports: [
+    Button,
     PlanningHeader,
     PlanningSummary,
     PlanningWeek,
@@ -32,69 +34,34 @@ type PlanningModal = 'task' | 'event' | 'block' | null;
     PlanningSidebar,
     PlanningModalTask,
     PlanningModalEvent,
-    PlanningModalBlock,
     EntryDetails,
     Toast,
   ],
-  template: `
-    <div class="space-y-6">
-      <app-planning-header />
-
-      <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <div class="min-w-0 space-y-6">
-          <app-planning-summary />
-
-          <app-planning-week />
-
-          <div class="flex flex-wrap items-center justify-between gap-3">
-            <app-planning-filters />
-            <app-planning-quick-actions (create)="onQuickAction($event)" />
-          </div>
-
-          <app-planning-timeline (edit)="onEdit($event)" />
-        </div>
-
-        <app-planning-sidebar
-          class="w-full lg:sticky lg:top-6 lg:self-start"
-          (plan)="onPlan()"
-          (create)="onAdd()"
-        />
-      </div>
-    </div>
-
-    @if (modal() === 'task') {
-      <app-planning-modal-task [entry]="editing()" (saved)="onSaved($event)" (closed)="onClose()" />
-    }
-    @if (modal() === 'event') {
-      <app-planning-modal-event [entry]="editing()" (saved)="onSaved($event)" (closed)="onClose()" />
-    }
-    @if (modal() === 'block') {
-      <app-planning-modal-block [entry]="editing()" (saved)="onSaved($event)" (closed)="onClose()" />
-    }
-
-    @if (service.selectedEntry(); as entry) {
-      <app-entry-details [entry]="entry" (closed)="service.closeEntry()" (edit)="onEdit($event)" />
-    }
-
-    @if (toast(); as message) {
-      <app-toast [message]="message" [tone]="toastTone()" (closed)="toast.set(null)" />
-    }
-  `,
+  templateUrl: './planning-page.html',
+  styleUrl: './planning-page.scss',
 })
-export class PlanningPage {
+export class PlanningPage implements OnInit {
   protected readonly service = inject(PlanningService);
   private readonly languageService = inject(LanguageService);
+  private readonly route = inject(ActivatedRoute);
 
   protected readonly modal = signal<PlanningModal>(null);
   protected readonly editing = signal<PlanningEntry | null>(null);
   protected readonly toast = signal<string | null>(null);
   protected readonly toastTone = signal<ToastTone>('primary');
+  protected readonly loadingLabel = this.languageService.translateSignal('common.loading');
+  protected readonly retryLabel = this.languageService.translateSignal('common.retry');
+  protected readonly loadError = this.languageService.translateSignal('planning.loadError');
+
+  ngOnInit(): void {
+    const modal = this.route.snapshot.queryParamMap.get('modal');
+    if (modal === 'task' || modal === 'event') {
+      this.openModal(modal);
+    }
+    this.service.load();
+  }
 
   protected onQuickAction(kind: QuickActionKind): void {
-    if (kind === 'plan') {
-      this.onPlan();
-      return;
-    }
     this.openModal(kind);
   }
 
@@ -102,10 +69,10 @@ export class PlanningPage {
     this.openModal('task');
   }
 
-  protected onPlan(): void {
-    this.service.planDay();
+  protected onRefresh(): void {
+    this.service.load();
     this.toastTone.set('primary');
-    this.toast.set(this.languageService.translate('planning.toasts.autoPlanned'));
+    this.toast.set(this.languageService.translate('planning.toasts.refreshed'));
   }
 
   protected openModal(kind: Exclude<PlanningModal, null>): void {
@@ -115,20 +82,28 @@ export class PlanningPage {
 
   protected onEdit(entry: PlanningEntry): void {
     this.editing.set(entry);
-    this.modal.set(entry.type === 'task' ? 'task' : entry.type === 'event' ? 'event' : 'block');
+    this.modal.set(entry.type === 'task' ? 'task' : 'event');
   }
 
   protected onSaved(entry: PlanningEntry): void {
-    if (this.editing()) {
-      this.service.updateEntry(entry);
-      this.toastTone.set('success');
-      this.toast.set(this.languageService.translate('planning.toasts.updated'));
-    } else {
-      this.service.addEntry(entry);
-      this.toastTone.set('success');
-      this.toast.set(this.languageService.translate('planning.toasts.added'));
-    }
-    this.onClose();
+    const operation = this.editing()
+      ? this.service.updateEntry(entry)
+      : this.service.addEntry(entry);
+    operation.subscribe({
+      next: () => {
+        this.toastTone.set('success');
+        this.toast.set(
+          this.languageService.translate(
+            this.editing() ? 'planning.toasts.updated' : 'planning.toasts.added',
+          ),
+        );
+        this.onClose();
+      },
+      error: () => {
+        this.toastTone.set('primary');
+        this.toast.set(this.languageService.translate('planning.operationError'));
+      },
+    });
   }
 
   protected onClose(): void {

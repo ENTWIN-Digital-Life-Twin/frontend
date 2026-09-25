@@ -11,7 +11,8 @@ import {
   type LucideIcon,
 } from '@lucide/angular';
 import { LanguageService } from '../../../../core/services/language.service';
-import { MOCK_TIMELINE, type TimelineKind } from '../../models/wellness.models';
+import { type TimelineKind } from '../../models/wellness.models';
+import { WellnessService } from '../../services/wellness.service';
 
 const KIND_VISUALS: Record<TimelineKind, { icon: LucideIcon; chip: string }> = {
   wake: { icon: LucideSunrise, chip: 'bg-teal-50 text-accent-dark' },
@@ -71,18 +72,21 @@ const KIND_VISUALS: Record<TimelineKind, { icon: LucideIcon; chip: string }> = {
 })
 export class WellnessTimeline {
   private readonly languageService = inject(LanguageService);
+  private readonly wellness = inject(WellnessService);
 
   protected readonly visuals = KIND_VISUALS;
   protected readonly title = this.languageService.translateSignal('wellness.timeline.title');
   protected readonly subtitle = this.languageService.translateSignal('wellness.timeline.subtitle');
 
   protected readonly items = computed(() =>
-    MOCK_TIMELINE.map((item) => ({
+    this.wellness.timelineItems().map((item) => ({
       id: item.id,
       time: item.time,
       kind: item.kind,
-      title: this.languageService.translate(item.titleKey),
-      detail: this.languageService.translate(item.detailKey, item.detailVars),
+      title: item.title ?? (item.titleKey ? this.languageService.translate(item.titleKey) : ''),
+      detail:
+        item.detail ??
+        (item.detailKey ? this.languageService.translate(item.detailKey, item.detailVars) : ''),
     })),
   );
 

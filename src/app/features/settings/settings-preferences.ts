@@ -196,12 +196,16 @@ export class SettingsPreferences {
   });
 
   protected onLanguageChange(value: string): void {
-    this.languageService.setLanguage(value as LanguageCode);
-    this.service.setLanguage(value as LanguageCode);
+    const language = value as LanguageCode;
+    this.languageService.setLanguage(language);
+    this.service.setLanguage(language);
+    this.service.persistLocale(language);
   }
 
   protected onTimezoneChange(value: string): void {
-    this.service.setTimezone(value as TimezoneCode);
+    const timezone = value as TimezoneCode;
+    this.service.setTimezone(timezone);
+    this.service.persistLocale(undefined, timezone);
   }
 
   protected onDateFormatChange(value: string): void {

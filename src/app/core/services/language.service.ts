@@ -24,8 +24,10 @@ export class LanguageService {
     ar: null as unknown as Record<string, unknown>,
   };
 
-  private readonly loadedLanguages = new Set<AppLanguage>(['fr']);
+  private readonly loadedLanguages = new Set<AppLanguage>();
+  private readonly languageLoads = new Map<AppLanguage, Promise<void>>();
   private frFullLoaded = false;
+  private frFullLoad: Promise<void> | null = null;
 
   /** Bumped when lazy translations finish loading so computed signals re-evaluate. */
   private readonly translationsReady = signal(0);
@@ -39,6 +41,7 @@ export class LanguageService {
   constructor() {
     const stored = this.readStoredLanguage();
     this.applyLanguage(stored);
+    void this.loadLanguage(stored);
     this.preloadOtherLanguages(stored);
   }
 
@@ -56,39 +59,53 @@ export class LanguageService {
   }
 
   /** Replace the public-only FR subset with the complete FR translations. */
-  private loadFullFrTranslations(): void {
-    if (this.frFullLoaded) return;
-    this.frFullLoaded = true;
-    import('../i18n/fr').then((m) => {
-      this.translations.fr = m.FR_TRANSLATIONS;
-      this.translationsReady.update((v) => v + 1);
-    });
+  private loadFullFrTranslations(): Promise<void> {
+    if (this.frFullLoaded) return Promise.resolve();
+    if (this.frFullLoad) return this.frFullLoad;
+
+    this.frFullLoad = import('../i18n/fr')
+      .then((m) => {
+        this.translations.fr = m.FR_TRANSLATIONS;
+        this.frFullLoaded = true;
+        this.loadedLanguages.add('fr');
+        this.translationsReady.update((v) => v + 1);
+      })
+      .catch((error: unknown) => {
+        this.frFullLoad = null;
+        throw error;
+      });
+    return this.frFullLoad;
   }
 
-  private loadLanguage(lang: AppLanguage): void {
-    if (this.loadedLanguages.has(lang)) return;
-    this.loadedLanguages.add(lang);
+  private loadLanguage(lang: AppLanguage): Promise<void> {
+    if (lang === 'fr') return this.loadFullFrTranslations();
+    if (this.loadedLanguages.has(lang)) return Promise.resolve();
 
-    const apply = () => {
-      // Only invalidate every translated binding when the loaded language can
-      // change what is currently displayed. Loading en/ar in the background
-      // while FR is active must not re-render the whole page.
-      if (lang === this.activeLanguage()) {
-        this.translationsReady.update((v) => v + 1);
-      }
-    };
+    const pending = this.languageLoads.get(lang);
+    if (pending) return pending;
 
-    if (lang === 'en') {
-      import('../i18n/en').then((m) => {
-        this.translations.en = m.EN_TRANSLATIONS;
-        apply();
+    const translationLoad =
+      lang === 'en'
+        ? import('../i18n/en').then((module) => module.EN_TRANSLATIONS)
+        : import('../i18n/ar').then((module) => module.AR_TRANSLATIONS);
+    const load = translationLoad
+      .then((translations) => {
+        this.translations[lang] = translations;
+        this.loadedLanguages.add(lang);
+        // Only invalidate every translated binding when the loaded language can
+        // change what is currently displayed. Loading en/ar in the background
+        // while FR is active must not re-render the whole page.
+        if (lang === this.activeLanguage()) {
+          this.translationsReady.update((v) => v + 1);
+        }
+      })
+      .catch((error: unknown) => {
+        this.languageLoads.delete(lang);
+        throw error;
       });
-    } else {
-      import('../i18n/ar').then((m) => {
-        this.translations.ar = m.AR_TRANSLATIONS;
-        apply();
-      });
-    }
+
+    this.languageLoads.set(lang, load);
+    return load;
   }
 
   /** All available languages with their display names and flags. */
@@ -120,6 +137,10 @@ export class LanguageService {
       ar: 'ar-EG',
     };
     return locales[this.activeLanguage()];
+  }
+
+  ensureActiveLanguageLoaded(): Promise<void> {
+    return this.loadLanguage(this.activeLanguage());
   }
 
   /** Set the active language code. Persists and applies document attributes. */
@@ -159,7 +180,11 @@ export class LanguageService {
       }
     }
 
-    if (typeof result === 'string' && vars) {
+    if (typeof result !== 'string') {
+      return key as unknown as T;
+    }
+
+    if (vars) {
       Object.entries(vars).forEach(([k, v]) => {
         result = (result as string).replace(
           new RegExp(`{{${k}}}`, 'g'),

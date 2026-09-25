@@ -1,9 +1,10 @@
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, computed, effect, inject, signal } from '@angular/core';
+import { environment } from '../../../../environments/environment';
 import { LanguageService } from '../../../core/services/language.service';
 import {
   CATEGORY_KEYS,
   FILTER_KEYS,
-  MOCK_CALENDAR_EVENTS,
   addDaysISO,
   addMonthsISO,
   computeFreeSlots,
@@ -22,14 +23,111 @@ import {
   type CalendarFilter,
   type CalendarView,
   type DaySummary,
+  type EventCategory,
   type FreeSlot,
 } from '../models/calendar.models';
+
+type BackendEventType = 'PERSONAL' | 'WORK' | 'STUDY' | 'APPOINTMENT' | 'HEALTH' | 'SPORT' | 'OTHER';
+
+interface EventResponse {
+  id: string;
+  title: string;
+  description: string | null;
+  startDateTime: string;
+  endDateTime: string;
+  allDay: boolean;
+  eventType: BackendEventType;
+  locationLabel: string | null;
+  recurring: boolean;
+  recurrenceRule: string | null;
+}
+
+interface PageResponse<T> {
+  content: T[];
+}
+
+const CATEGORY_TO_EVENT_TYPE: Record<EventCategory, BackendEventType> = {
+  work: 'WORK',
+  personal: 'PERSONAL',
+  sport: 'SPORT',
+  studies: 'STUDY',
+  meeting: 'APPOINTMENT',
+};
+
+function categoryFromEventType(type: BackendEventType): EventCategory {
+  switch (type) {
+    case 'WORK':
+      return 'work';
+    case 'SPORT':
+      return 'sport';
+    case 'STUDY':
+      return 'studies';
+    case 'APPOINTMENT':
+      return 'meeting';
+    default:
+      return 'personal';
+  }
+}
+
+const pad2 = (value: number): string => String(value).padStart(2, '0');
+
+function toInstant(date: string, time: string): string {
+  const [year, month, day] = date.split('-').map(Number);
+  const [hour, minute] = time.split(':').map(Number);
+  return new Date(year, month - 1, day, hour, minute).toISOString();
+}
+
+function fromInstant(iso: string): { date: string; time: string } {
+  const d = new Date(iso);
+  return {
+    date: `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`,
+    time: `${pad2(d.getHours())}:${pad2(d.getMinutes())}`,
+  };
+}
 
 @Injectable({ providedIn: 'root' })
 export class CalendarService {
   private readonly languageService = inject(LanguageService);
+  private readonly http = inject(HttpClient);
+  private readonly baseUrl = `${environment.planningApiUrl}/events`;
 
-  readonly events = signal<CalendarEvent[]>(MOCK_CALENDAR_EVENTS);
+  readonly events = signal<CalendarEvent[]>([]);
+
+  private fromResponse(res: EventResponse, extras?: Partial<CalendarEvent>): CalendarEvent {
+    const start = fromInstant(res.startDateTime);
+    const end = fromInstant(res.endDateTime);
+    const durationMinutes = Math.max(
+      5,
+      Math.round((new Date(res.endDateTime).getTime() - new Date(res.startDateTime).getTime()) / 60_000),
+    );
+    return {
+      id: res.id,
+      title: res.title,
+      description: res.description ?? undefined,
+      date: start.date,
+      start: start.time,
+      end: end.time,
+      duration: durationMinutes,
+      category: categoryFromEventType(res.eventType),
+      location: res.locationLabel ?? undefined,
+      participants: extras?.participants,
+      reminder: extras?.reminder,
+    };
+  }
+
+  private toRequest(event: CalendarEvent): Record<string, unknown> {
+    return {
+      title: event.title ?? '',
+      description: event.description ?? null,
+      startDateTime: toInstant(event.date, event.start),
+      endDateTime: toInstant(event.date, event.end),
+      allDay: false,
+      eventType: CATEGORY_TO_EVENT_TYPE[event.category],
+      locationLabel: event.location ?? null,
+      recurring: false,
+      recurrenceRule: null,
+    };
+  }
 
   readonly selectedDate = signal<string>(todayISO());
   readonly view = signal<CalendarView>('month');
@@ -40,6 +138,15 @@ export class CalendarService {
   readonly now = signal(new Date());
 
   constructor() {
+    this.http
+      .get<PageResponse<EventResponse>>(this.baseUrl, {
+        params: new HttpParams().set('page', '0').set('size', '200'),
+      })
+      .subscribe({
+        next: (page) => this.events.set(page.content.map((res) => this.fromResponse(res))),
+        error: () => this.events.set([]),
+      });
+
     effect(() => {
       const timer = setInterval(() => this.now.set(new Date()), 60_000);
       return () => clearInterval(timer);
@@ -233,20 +340,47 @@ export class CalendarService {
   }
 
   addEvent(event: CalendarEvent): void {
+    const tempId = event.id;
     this.events.update((events) => [...events, event]);
     this.selectedDate.set(event.date);
     this.selectedEventId.set(null);
+
+    this.http.post<EventResponse>(this.baseUrl, this.toRequest(event)).subscribe({
+      next: (res) => {
+        const created = this.fromResponse(res, event);
+        this.events.update((events) =>
+          events.map((item) => (item.id === tempId ? created : item)),
+        );
+      },
+      error: (err) => {
+        console.error('Failed to create event', err);
+        this.events.update((events) => events.filter((item) => item.id !== tempId));
+      },
+    });
   }
 
   updateEvent(event: CalendarEvent): void {
     this.events.update((events) =>
       events.map((item) => (item.id === event.id ? event : item)),
     );
+
+    this.http.put<EventResponse>(`${this.baseUrl}/${event.id}`, this.toRequest(event)).subscribe({
+      next: (res) => {
+        const updated = this.fromResponse(res, event);
+        this.events.update((events) =>
+          events.map((item) => (item.id === event.id ? updated : item)),
+        );
+      },
+      error: (err) => console.error('Failed to update event', err),
+    });
   }
 
   deleteEvent(id: string): void {
     this.events.update((events) => events.filter((event) => event.id !== id));
     this.selectedEventId.set(null);
+    this.http
+      .delete(`${this.baseUrl}/${id}`)
+      .subscribe({ error: (err) => console.error('Failed to delete event', err) });
   }
 
   eventsFor(iso: string): CalendarEvent[] {

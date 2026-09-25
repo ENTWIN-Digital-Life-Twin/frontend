@@ -158,8 +158,8 @@ export class GlobalSearchService {
       results.push({
         id: `notif-${notif.id}`,
         category: 'notifications',
-        title: t(notif.titleKey),
-        subtitle: t(notif.messageKey),
+        title: notif.title,
+        subtitle: notif.message,
         path: '/notifications',
         icon: LucideBell,
         rank: 4,

@@ -1,0 +1,27 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.planning-page {
+  box-sizing: border-box;
+}
+
+app-planning-summary,
+app-planning-week,
+app-planning-timeline {
+  display: block;
+}
+
+@media (max-width: 639px) {
+  .planning-page {
+    padding-inline: 1rem;
+    padding-block: 1.25rem 2rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host * {
+    scroll-behavior: auto;
+  }
+}

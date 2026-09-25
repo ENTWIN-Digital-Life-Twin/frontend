@@ -63,7 +63,7 @@ function dateLabelFor(iso: string, locale: string): string {
             {{ WORKOUT_TYPE_LABELS()[workout().type] }}
           </p>
           <h2 class="mt-1 font-display text-2xl font-semibold tracking-tight text-primary">
-            {{ t(workout().title) }}
+            {{ workout().title }}
           </h2>
           <div class="mt-3 flex flex-wrap items-center gap-2">
             <app-badge variant="accent" [dot]="true">{{ INTENSITY_LABELS()[workout().intensity] }}</app-badge>
@@ -106,7 +106,7 @@ function dateLabelFor(iso: string, locale: string): string {
           @if (workout().notes) {
             <div class="mt-5 rounded-panel border border-line bg-surface p-4">
               <p class="text-xs font-semibold uppercase tracking-wide text-ink-muted">{{ notesLabel() }}</p>
-              <p class="mt-1.5 text-sm leading-relaxed text-ink">{{ t(workout().notes) }}</p>
+              <p class="mt-1.5 text-sm leading-relaxed text-ink">{{ workout().notes }}</p>
             </div>
           }
 
@@ -154,10 +154,6 @@ export class WorkoutDetails {
   readonly delete = output<Workout>();
 
   private readonly languageService = inject(LanguageService);
-
-  protected t(key: string): string {
-    return this.languageService.translate(key);
-  }
 
   protected readonly WORKOUT_TYPE_CHIP = WORKOUT_TYPE_CHIP;
   protected readonly formatDuration = formatDuration;

@@ -209,6 +209,20 @@ export const FR_TRANSLATIONS = {
   dashboard: {
     greeting: 'Bonjour, {{name}} 👋',
     subtitle: 'Voici votre aperçu de la journée.',
+    user: 'Utilisateur',
+    statusBalanced: 'Planning équilibré',
+    statusOverloaded: 'Planning surchargé',
+    changeFromYesterday: '{{value}} % par rapport à hier',
+    occupiedTime: 'Temps planifié',
+    viewAll: 'Tout voir',
+    viewCalendar: 'Voir le calendrier',
+    noTimeline: 'Rien n’est planifié aujourd’hui.',
+    noUpcoming: 'Aucun événement à venir aujourd’hui.',
+    noWellness: 'Aucune donnée bien-être enregistrée aujourd’hui.',
+    noChartData: 'Aucune donnée disponible pour cette période.',
+    loadError: 'Impossible de charger ces informations.',
+    openAssistant: 'Consultez vos analyses ou demandez de l’aide à l’assistant à partir des données réelles de l’application.',
+    weeklyAverageValue: 'Moyenne {{value}} %',
     balanced: 'Votre journée est bien équilibrée',
     quickActions: {
       newTask: 'Nouvelle tâche',
@@ -271,6 +285,8 @@ export const FR_TRANSLATIONS = {
       daysShort: ['L', 'M', 'M', 'J', 'V', 'S', 'D'],
       sleep: 'Sommeil',
       hydration: 'Hydratation',
+      activity: 'Activité',
+      nutrition: 'Nutrition',
       wellbeing: 'Bien-être',
     },
   },
@@ -467,8 +483,12 @@ export const FR_TRANSLATIONS = {
     },
     sidebar: {
       planDay: 'Planifier ma journée',
+      refresh: 'Actualiser le planning',
       addEntry: 'Ajouter un élément',
       today: 'Aujourd’hui',
+      tasks: 'Tâches',
+      events: 'Événements',
+      freeTime: 'Temps libre',
       dayLoad: 'Charge de la journée',
       categoriesTitle: 'Aperçu des catégories',
       noActivity: 'Aucune activité planifiée ce jour.',
@@ -852,6 +872,9 @@ export const FR_TRANSLATIONS = {
     globalBalance: 'Votre équilibre global',
     summaryText:
       'Votre journée est globalement bien équilibrée. Les principaux leviers d’amélioration sont l’hydratation et la tâche en retard. Une pause après le déjeuner soutiendrait votre concentration de l’après-midi.',
+    noInsightsYet:
+      'Pas encore assez de données pour générer des insights. Enregistrez votre sommeil, votre hydratation ou vos tâches pour commencer.',
+    chatError: 'Désolé, je n’ai pas pu obtenir de réponse pour le moment. Réessayez dans un instant.',
     categories: {
       productivity: 'Productivité',
       wellness: 'Bien-être',
@@ -1400,6 +1423,7 @@ export const FR_TRANSLATIONS = {
     entryTypeBreak: 'Pause',
     entryTypeSport: 'Sport',
     entryTypeFree: 'Temps libre',
+    untitled: 'Sans titre',
   },
   tasksExtended: {
     detailOpenAria: 'Ouvrir le détail de ',

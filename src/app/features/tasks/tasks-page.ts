@@ -1,4 +1,5 @@
-import { AfterViewInit, Component, ElementRef, computed, inject, signal } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnInit, computed, inject, signal } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import {
   LucideActivity,
   LucideAlarmClock,
@@ -256,9 +257,10 @@ type TaskSortOption = { value: TaskSort; label: string };
     }
   `,
 })
-export class TasksPage implements AfterViewInit {
+export class TasksPage implements OnInit, AfterViewInit {
   protected readonly service = inject(TaskService);
   private readonly languageService = inject(LanguageService);
+  private readonly route = inject(ActivatedRoute);
 
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -355,6 +357,12 @@ export class TasksPage implements AfterViewInit {
       s.categoryFilter() !== 'all'
     );
   });
+
+  ngOnInit(): void {
+    if (this.route.snapshot.queryParamMap.get('create') === 'true') {
+      this.openCreate();
+    }
+  }
 
   protected onSearch(event: Event): void {
     this.service.setSearch((event.target as HTMLInputElement).value);

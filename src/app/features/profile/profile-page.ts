@@ -26,6 +26,10 @@ import { Toast, type ToastTone } from '../../shared/ui/toast/toast';
 import { ProfileService, type ProfileState } from './services/profile.service';
 import { ACTIONS, ERROR_TEXT, FIELD, GRID_2, INPUT, LABEL, TEXTAREA } from '../../shared/ui/form-styles/form-styles';
 import { LanguageService } from '../../core/services/language.service';
+import { DashboardService } from '../../core/services/dashboard/dashboard.service';
+import { CalendarService } from '../calendar/services/calendar.service';
+import { SportService } from '../sport/services/sport.service';
+import { TaskService } from '../tasks/services/task.service';
 
 const LANGUAGES = ['Français', 'English', 'العربية'];
 const TIMEZONES = [
@@ -97,7 +101,7 @@ const TIMEZONES = [
           <div class="mt-6 space-y-2 border-t border-white/10 pt-5">
             <p class="flex items-center gap-2.5 text-sm text-white/80">
               <svg lucideGlobe class="h-4 w-4 text-teal-200" aria-hidden="true"></svg>
-              {{ state().language }}
+              {{ languageLabel() }}
             </p>
             <p class="flex items-center gap-2.5 text-sm text-white/80">
               <svg lucideClock class="h-4 w-4 text-teal-200" aria-hidden="true"></svg>
@@ -133,22 +137,22 @@ const TIMEZONES = [
             <div class="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
               <div class="rounded-panel border border-line bg-surface-muted/50 p-4">
                 <svg lucideTarget class="h-4 w-4 text-accent-dark" aria-hidden="true"></svg>
-                <p class="mt-2 font-display text-2xl font-bold tabular-nums text-primary">156</p>
+                <p class="mt-2 font-display text-2xl font-bold tabular-nums text-primary">{{ tasksDone() }}</p>
                 <p class="text-[11px] text-ink-muted">{{ t('profile.stats.tasksDone') }}</p>
               </div>
               <div class="rounded-panel border border-line bg-surface-muted/50 p-4">
                 <svg lucideCalendarDays class="h-4 w-4 text-accent-dark" aria-hidden="true"></svg>
-                <p class="mt-2 font-display text-2xl font-bold tabular-nums text-primary">48</p>
+                <p class="mt-2 font-display text-2xl font-bold tabular-nums text-primary">{{ eventsCreated() }}</p>
                 <p class="text-[11px] text-ink-muted">{{ t('profile.stats.eventsCreated') }}</p>
               </div>
               <div class="rounded-panel border border-line bg-surface-muted/50 p-4">
                 <svg lucideTimer class="h-4 w-4 text-accent-dark" aria-hidden="true"></svg>
-                <p class="mt-2 font-display text-2xl font-bold tabular-nums text-primary">12</p>
+                <p class="mt-2 font-display text-2xl font-bold tabular-nums text-primary">{{ workoutsCount() }}</p>
                 <p class="text-[11px] text-ink-muted">{{ t('profile.stats.workouts') }}</p>
               </div>
               <div class="rounded-panel border border-line bg-surface-muted/50 p-4">
                 <svg lucideSmile class="h-4 w-4 text-accent-dark" aria-hidden="true"></svg>
-                <p class="mt-2 font-display text-2xl font-bold tabular-nums text-primary">82</p>
+                <p class="mt-2 font-display text-2xl font-bold tabular-nums text-primary">{{ balanceScore() }}</p>
                 <p class="text-[11px] text-ink-muted">{{ t('profile.stats.balance') }}</p>
               </div>
             </div>
@@ -187,7 +191,7 @@ const TIMEZONES = [
               </div>
               <div>
                 <dt class="text-xs text-ink-faint">{{ t('profile.language') }}</dt>
-                <dd class="mt-0.5 text-sm font-semibold text-primary">{{ state().language }}</dd>
+                <dd class="mt-0.5 text-sm font-semibold text-primary">{{ languageLabel() }}</dd>
               </div>
             </dl>
             <div class="mt-5 rounded-panel border border-line bg-surface-muted/50 p-4">
@@ -311,6 +315,7 @@ const TIMEZONES = [
               type="email"
               [ngModel]="draft().email"
               name="email"
+              readonly
               (ngModelChange)="patchDraft({ email: $event })"
             />
           </div>
@@ -340,7 +345,7 @@ const TIMEZONES = [
                 (ngModelChange)="patchDraft({ language: $event })"
               >
                 @for (lang of languageOptions; track lang.code) {
-                  <option [value]="lang.name">{{ lang.name }}</option>
+                  <option [value]="lang.code">{{ lang.name }}</option>
                 }
               </select>
             </div>
@@ -384,6 +389,10 @@ export class ProfilePage implements AfterViewInit {
   private readonly service = inject(ProfileService);
   private readonly languageService = inject(LanguageService);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly dashboard = inject(DashboardService);
+  private readonly tasks = inject(TaskService);
+  private readonly calendar = inject(CalendarService);
+  private readonly sport = inject(SportService);
 
   protected readonly languageOptions = this.languageService.languageOptions;
   protected readonly t = (key: string, vars?: Record<string, string>) => this.languageService.translate<string>(key, vars);
@@ -401,7 +410,26 @@ export class ProfilePage implements AfterViewInit {
   protected readonly ACTIONS = ACTIONS;
   protected readonly ERROR_TEXT = ERROR_TEXT;
 
-  protected readonly bioText = computed(() => this.languageService.translate(this.service.state().bio));
+  protected readonly bioText = computed(() => {
+    const bio = this.service.state().bio;
+    if (!bio) {
+      return this.languageService.translate('profile.subtitle');
+    }
+    return bio.startsWith('mock.') || bio.startsWith('profile.')
+      ? this.languageService.translate(bio)
+      : bio;
+  });
+  protected readonly languageLabel = computed(() => this.service.languageName());
+  protected readonly tasksDone = computed(
+    () =>
+      this.dashboard.stats()?.tasksCompleted ??
+      this.tasks.tasks().filter((task) => task.status === 'done').length,
+  );
+  protected readonly eventsCreated = computed(() => this.calendar.events().length);
+  protected readonly workoutsCount = computed(() => this.sport.workouts().length);
+  protected readonly balanceScore = computed(
+    () => this.dashboard.wellness()?.mood.level ?? this.dashboard.stats()?.productivityPercent ?? 0,
+  );
 
   protected readonly editOpen = signal(false);
   protected readonly draft = signal<ProfileState>(this.service.state());
@@ -422,13 +450,23 @@ export class ProfilePage implements AfterViewInit {
     if (!this.draft().firstName.trim() || !this.draft().lastName.trim()) {
       return;
     }
-    this.service.saveProfile(this.draft());
-    this.editOpen.set(false);
-    this.toastTone.set('success');
-    this.toast.set(this.t('profile.toast.updated'));
+    this.service.saveProfile(this.draft()).subscribe({
+      next: () => {
+        this.editOpen.set(false);
+        this.toastTone.set('success');
+        this.toast.set(this.t('profile.toast.updated'));
+      },
+      error: () => {
+        this.toastTone.set('primary');
+        this.toast.set(this.t('profile.toast.updated'));
+      },
+    });
   }
 
   ngAfterViewInit(): void {
+    if (this.dashboard.state().stats === 'idle') {
+      this.dashboard.loadAll();
+    }
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       return;
     }

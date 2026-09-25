@@ -4,13 +4,13 @@
 
 A premium, modern Angular frontend for **Digital Life Twin** — a platform that helps you understand and improve your daily rhythm: planning, tasks, events, wellness, nutrition, sport and AI-powered recommendations, all in one calm and sophisticated interface.
 
-This repository contains **only the Angular frontend**. All data comes from realistic mock services so a real backend can be connected later without rebuilding the UI.
+This repository contains the **Angular frontend**. It talks to the Spring Boot API Gateway at `http://localhost:8080` (proxied as `/api` in development).
 
 ---
 
 ## Features
 
-- **Authentication** — mock login / register with polished validation (FR/EN/AR)
+- **Authentication** — real JWT login / register / refresh / logout (FR/EN/AR)
 - **Dashboard** — "How is my day going?" bento overview: productivity, schedule, tasks, hydration, sleep, mood, stress, fatigue, free time, AI recommendation
 - **Planning** — daily timeline with tasks, events, time blocks, free time and overload detection
 - **Tasks** — list, search, filters, priority, categories, create / edit / delete / complete
@@ -19,21 +19,28 @@ This repository contains **only the Angular frontend**. All data comes from real
 - **Nutrition** — meals, calories, macros and daily progress
 - **Sport** — today's workout, weekly activity, history, intensity, calories, goal progress
 - **AI Insights** — fatigue / dehydration / overload / sedentary risk cards with confidence and recommendations
-- **AI Assistant** — chat interface with mock AI responses and suggested questions
+- **AI Assistant** — chat interface wired to `POST /api/v1/ai/chat`
 - **Notifications** — reminders with read / unread / delete management
 - **Profile & Settings** — personal info, goals, targets, preferences, quiet hours, appearance, notifications
 - **Admin** — aggregated mock usage dashboard and users table (ADMIN only)
 - **Public pages** — home, features, about, contact
 - **i18n** — English, French and Arabic
 
-## Demo credentials
+## Backend (required)
 
-| Field    | Value      |
-| -------- | ---------- |
-| Email    | `demo@digital-life-twin.com` |
-| Password | `demo123`  |
+The UI calls the **API Gateway** only. Start PostgreSQL and the backend modules first (from `../backend`):
 
-> This is **mock authentication** for frontend development only. It is not real security. The auth service is designed so real JWT authentication can be integrated later.
+```bash
+docker compose up -d dlt-postgres
+.\mvnw.cmd -pl auth-service -am spring-boot:run
+.\mvnw.cmd -pl planning-service -am spring-boot:run
+.\mvnw.cmd -pl wellness-service -am spring-boot:run
+.\mvnw.cmd -pl notification-service -am spring-boot:run
+.\mvnw.cmd -pl ai-service -am spring-boot:run
+.\mvnw.cmd -pl api-gateway -am spring-boot:run
+```
+
+Or `docker compose up -d` for the full stack. Create an account from `/register` — there are no demo users.
 
 ## Tech stack
 
@@ -73,7 +80,7 @@ npm install
 npm start
 ```
 
-Open `http://localhost:4200/`.
+Open `http://localhost:4200/`. `ng serve` proxies `/api` to the gateway on port `8080`.
 
 ### Production build
 
@@ -110,16 +117,13 @@ Each feature area is isolated (components, models, services) and lazy-loaded whe
 
 ## Architecture notes
 
-- **API readiness** — feature services are structured as future REST boundaries (e.g. `GET /api/tasks`, `POST /api/wellness/sleep`, `POST /api/ai/lifestyle-risk`). Today they return realistic mock data; swapping them for HTTP calls requires no UI changes.
+- **API** — all feature services call the gateway (`/api` and `/api/v1`). Auth, planning, wellness, nutrition, sport, notifications, AI, profile and settings persist to the backend.
 - **Accessibility** — semantic HTML, keyboard navigation, visible focus states and reduced-motion support.
 - **States** — every data-driven screen includes loading (skeleton), empty and error states with retry actions.
 
-## Future work
+## Not in the backend yet
 
-- Connect real JWT authentication and a real backend API
-- Replace mock data layer with REST services
-- Real LLM-powered assistant
-- Dark theme
+These UI pieces stay local or placeholder until the API exists: forgot password, OAuth, admin, contact form, task subtasks, calendar participants, and appearance/privacy toggles.
 
 ---
 

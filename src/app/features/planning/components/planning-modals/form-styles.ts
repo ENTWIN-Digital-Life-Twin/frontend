@@ -6,4 +6,4 @@ export const SELECT = INPUT;
 export const TEXTAREA = INPUT + ' resize-none';
 export const ERROR_TEXT = 'mt-1 text-[11px] font-medium text-danger';
 export const ACTIONS = 'mt-6 flex justify-end gap-2';
-export const GRID_2 = 'grid grid-cols-2 gap-3';
+export const GRID_2 = 'grid grid-cols-1 gap-4 sm:grid-cols-2';

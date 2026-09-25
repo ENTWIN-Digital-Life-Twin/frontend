@@ -1,6 +1,7 @@
-import { Injectable, signal } from '@angular/core';
-import { inject } from '@angular/core';
-import { AuthService } from '../../../core/services/auth/auth.service';
+import { Injectable, computed, effect, inject, signal } from '@angular/core';
+import { Observable, of, tap } from 'rxjs';
+import { AuthService, type UserProfile } from '../../../core/services/auth/auth.service';
+import { LanguageService, type AppLanguage } from '../../../core/services/language.service';
 
 export interface ProfilePreferences {
   activitySummary: boolean;
@@ -25,9 +26,9 @@ export interface ProfileState {
   bio: string;
 }
 
-const STORAGE_KEY = 'dlt.profile';
 const STORAGE_PREFS = 'dlt.profile.prefs';
 const STORAGE_WELLNESS = 'dlt.profile.wellness';
+const STORAGE_BIO = 'dlt.profile.bio';
 
 function read<T>(key: string, fallback: T): T {
   try {
@@ -46,20 +47,42 @@ function write(key: string, value: unknown): void {
   }
 }
 
+function fromAuthProfile(profile: UserProfile | null, fallback: ProfileState): ProfileState {
+  if (!profile) {
+    return fallback;
+  }
+  return {
+    firstName: profile.firstName,
+    lastName: profile.lastName,
+    email: profile.email,
+    timezone: profile.timezone || fallback.timezone,
+    language: profile.preferredLanguage || fallback.language,
+    bio: fallback.bio,
+  };
+}
+
 @Injectable({ providedIn: 'root' })
 export class ProfileService {
   private readonly auth = inject(AuthService);
+  private readonly languageService = inject(LanguageService);
 
   private readonly defaults: ProfileState = {
-    firstName: this.auth.currentUser()?.firstName ?? 'Sarah',
-    lastName: this.auth.currentUser()?.lastName ?? 'Martin',
-    email: this.auth.currentUser()?.email ?? 'sarah.martin@example.com',
-    timezone: 'Europe/Paris (UTC+1)',
+    firstName: '',
+    lastName: '',
+    email: '',
+    timezone: 'Africa/Casablanca',
     language: 'fr',
-    bio: 'mock.profile.bio',
+    bio: read(STORAGE_BIO, ''),
   };
 
-  readonly state = signal<ProfileState>(read(STORAGE_KEY, this.defaults));
+  readonly state = signal<ProfileState>(
+    fromAuthProfile(this.auth.profile(), {
+      ...this.defaults,
+      firstName: this.auth.currentUser()?.firstName ?? '',
+      lastName: this.auth.currentUser()?.lastName ?? '',
+      email: this.auth.currentUser()?.email ?? '',
+    }),
+  );
   readonly prefs = signal<ProfilePreferences>(
     read<ProfilePreferences>(STORAGE_PREFS, {
       activitySummary: true,
@@ -71,15 +94,54 @@ export class ProfileService {
   );
   readonly wellness = signal<WellnessPreferences>(
     read<WellnessPreferences>(STORAGE_WELLNESS, {
-      sleepTarget: 7.5,
+      sleepTarget: 8,
       waterTarget: 2.5,
       activeMinutesTarget: 45,
     }),
   );
 
-  saveProfile(profile: ProfileState): void {
+  readonly languageName = computed(() => {
+    const code = this.state().language;
+    return this.languageService.languageOptions.find((option) => option.code === code)?.name ?? code;
+  });
+
+  constructor() {
+    effect(() => {
+      const profile = this.auth.profile();
+      const user = this.auth.currentUser();
+      this.state.update((current) =>
+        fromAuthProfile(profile, {
+          ...current,
+          firstName: user?.firstName ?? current.firstName,
+          lastName: user?.lastName ?? current.lastName,
+          email: user?.email ?? current.email,
+          bio: current.bio || read(STORAGE_BIO, ''),
+        }),
+      );
+      const language = profile?.preferredLanguage;
+      if (language === 'fr' || language === 'en' || language === 'ar') {
+        this.languageService.setLanguage(language);
+      }
+    }, { allowSignalWrites: true });
+  }
+
+  saveProfile(profile: ProfileState): Observable<UserProfile | null> {
+    write(STORAGE_BIO, profile.bio);
     this.state.set(profile);
-    write(STORAGE_KEY, profile);
+    if (profile.language === 'fr' || profile.language === 'en' || profile.language === 'ar') {
+      this.languageService.setLanguage(profile.language as AppLanguage);
+    }
+    if (!this.auth.currentUser()) {
+      return of(null);
+    }
+    return this.auth
+      .updateProfile({
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        preferredLanguage: profile.language,
+        timezone: profile.timezone,
+      })
+      .pipe(tap(() => this.state.update((current) => ({ ...current, ...profile }))));
   }
 
   savePrefs(prefs: ProfilePreferences): void {
