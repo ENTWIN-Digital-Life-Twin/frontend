@@ -1,6 +1,7 @@
+import { provideLocationMocks } from '@angular/common/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
-import { Router, provideRouter } from '@angular/router';
+import { ActivatedRoute, Router, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { LoginComponent } from './login.component';
@@ -34,6 +35,15 @@ describe('LoginComponent', () => {
       imports: [LoginComponent, ReactiveFormsModule],
       providers: [
         provideRouter([]),
+        provideLocationMocks(),
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: { queryParams: {}, params: {} },
+            queryParams: of({}),
+            params: of({}),
+          },
+        },
         { provide: AuthService, useValue: mockAuthService },
         { provide: LanguageService, useValue: mockLanguageService },
       ],

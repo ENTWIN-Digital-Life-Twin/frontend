@@ -32,7 +32,7 @@ export interface UpcomingEvent {
 
 export interface WellnessMetricData {
   value: string;
-  level: number;
+  level: number | null;
 }
 
 export interface WellnessData {
@@ -41,6 +41,8 @@ export interface WellnessData {
   activity: WellnessMetricData;
   nutrition: WellnessMetricData;
   mood: WellnessMetricData;
+  riskLevel?: string | null;
+  recommendations?: string[];
 }
 
 export interface WeeklyProductivity {

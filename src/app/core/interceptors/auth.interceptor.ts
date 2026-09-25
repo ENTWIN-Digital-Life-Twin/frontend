@@ -6,10 +6,19 @@ import { environment } from '../../../environments/environment';
 import { AuthService } from '../services/auth/auth.service';
 import { TokenStorageService } from '../services/auth/token-storage.service';
 
-const API_URLS = [environment.authApiUrl, environment.planningApiUrl, environment.wellnessApiUrl];
+const API_URLS = [
+  environment.authApiUrl,
+  environment.planningApiUrl,
+  environment.wellnessApiUrl,
+  environment.notificationApiUrl,
+  environment.aiApiUrl,
+];
 const PUBLIC_PATHS = ['/auth/login', '/auth/register', '/auth/refresh'];
 
 function isApiRequest(url: string): boolean {
+  if (url.startsWith('/api')) {
+    return true;
+  }
   return API_URLS.some((base) => url.startsWith(base));
 }
 
