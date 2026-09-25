@@ -4,6 +4,7 @@ import {
   LucideBell,
   LucideCheck,
   LucideCheckCheck,
+  LucideClock,
   LucideDynamicIcon,
   LucideSettings,
   LucideTrash2,
@@ -15,6 +16,7 @@ import { Badge } from '../../shared/ui/badge/badge';
 import { EmptyState } from '../../shared/ui/empty-state/empty-state';
 import { Drawer } from '../../shared/ui/drawer/drawer';
 import { NotificationService } from './services/notification.service';
+import { ReminderService } from './services/reminder.service';
 import {
   NOTIFICATION_TYPE_CHIP,
   NOTIFICATION_TYPE_ICONS,
@@ -37,6 +39,7 @@ type FilterOption = { value: NotificationFilter; label: string };
     LucideDynamicIcon,
     LucideCheck,
     LucideCheckCheck,
+    LucideClock,
     LucideSettings,
     LucideTrash2,
     LucideX,
@@ -69,6 +72,34 @@ type FilterOption = { value: NotificationFilter; label: string };
           </a>
         </div>
       </header>
+
+      <section class="rounded-card border border-line bg-surface p-4 shadow-card">
+        <div class="mb-3 flex items-center gap-2">
+          <svg lucideClock class="h-4 w-4 text-accent-dark" aria-hidden="true"></svg>
+          <h2 class="font-display text-sm font-semibold uppercase tracking-[0.16em] text-ink-muted">
+            {{ upcomingTitle() }}
+          </h2>
+        </div>
+        @if (upcoming().length === 0) {
+          <p class="text-sm text-ink-muted">{{ upcomingEmpty() }}</p>
+        } @else {
+          <ul class="divide-y divide-line">
+            @for (item of upcoming(); track item.id) {
+              <li class="flex items-start justify-between gap-3 py-2.5 first:pt-0 last:pb-0">
+                <span class="min-w-0">
+                  <span class="block truncate text-sm font-semibold text-primary">{{ item.title }}</span>
+                  @if (item.message) {
+                    <span class="mt-0.5 block truncate text-xs text-ink-muted">{{ item.message }}</span>
+                  }
+                </span>
+                <span class="shrink-0 text-xs tabular-nums text-ink-faint">
+                  {{ reminderWhen(item.nextTriggerAt) }}
+                </span>
+              </li>
+            }
+          </ul>
+        }
+      </section>
 
       <!-- Filtres -->
       <section class="flex flex-wrap gap-1 rounded-card border border-line bg-surface p-2 shadow-card">
@@ -238,6 +269,7 @@ type FilterOption = { value: NotificationFilter; label: string };
 })
 export class NotificationsPage implements AfterViewInit {
   protected readonly service = inject(NotificationService);
+  private readonly reminderService = inject(ReminderService);
   private readonly languageService = inject(LanguageService);
 
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
@@ -258,6 +290,8 @@ export class NotificationsPage implements AfterViewInit {
   protected readonly emptyDescription = this.languageService.translateSignal(
     'notifications.emptyDescription',
   );
+  protected readonly upcomingTitle = this.languageService.translateSignal('notifications.upcomingTitle');
+  protected readonly upcomingEmpty = this.languageService.translateSignal('notifications.upcomingEmpty');
   protected readonly markRead = this.languageService.translateSignal('notifications.markRead');
   protected readonly deleteNotification = this.languageService.translateSignal(
     'notifications.deleteNotification',
@@ -304,6 +338,8 @@ export class NotificationsPage implements AfterViewInit {
 
   protected readonly groups = computed(() => this.service.grouped());
 
+  protected readonly upcoming = computed(() => this.reminderService.upcoming());
+
   protected readonly selected = computed(() => this.service.selected());
 
   protected sectionLabel(section: NotificationSection): string {
@@ -337,6 +373,16 @@ export class NotificationsPage implements AfterViewInit {
       day: 'numeric',
       month: 'short',
     }).format(date);
+  }
+
+  protected reminderWhen(iso: string): string {
+    return new Intl.DateTimeFormat(this.languageService.getLocale(), {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(new Date(iso));
   }
 
   protected openLabel(title: string): string {

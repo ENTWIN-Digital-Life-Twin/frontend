@@ -1,6 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { environment } from '../../../../environments/environment';
+import { TokenStorageService } from '../../../core/services/auth/token-storage.service';
 import {
   sectionFor,
   type AppNotification,
@@ -72,37 +73,20 @@ function fromResponse(res: NotificationResponse): AppNotification {
   };
 }
 
+const POLL_MS = 45_000;
+
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
   private readonly http = inject(HttpClient);
+  private readonly tokenStorage = inject(TokenStorageService);
   private readonly baseUrl = `${environment.notificationApiUrl}/notifications`;
+  private pollHandle: ReturnType<typeof setInterval> | null = null;
 
   private readonly notificationsSignal = signal<AppNotification[]>([]);
   readonly notifications = this.notificationsSignal.asReadonly();
 
   readonly filter = signal<NotificationFilter>('all');
   readonly selectedId = signal<string | null>(null);
-
-  constructor() {
-    this.refresh();
-  }
-
-  refresh(): void {
-    this.http
-      .get<PageResponse<NotificationResponse>>(this.baseUrl, {
-        params: new HttpParams()
-          .set('page', '0')
-          .set('size', '50')
-          .set('sort', 'scheduledAt,desc'),
-      })
-      .subscribe({
-        next: (page) => this.notificationsSignal.set(page.content.map(fromResponse)),
-        error: (err) => {
-          console.error('Failed to load notifications', err);
-          this.notificationsSignal.set([]);
-        },
-      });
-  }
 
   readonly unreadCount = computed(
     () => this.notificationsSignal().filter((notification) => !notification.read).length,
@@ -140,6 +124,43 @@ export class NotificationService {
       this.notificationsSignal().find((notification) => notification.id === this.selectedId()) ??
       null,
   );
+
+  startSession(): void {
+    if (!this.tokenStorage.getAccessToken()) {
+      return;
+    }
+    this.refresh();
+    if (this.pollHandle) {
+      return;
+    }
+    this.pollHandle = setInterval(() => this.refresh(), POLL_MS);
+  }
+
+  stopSession(): void {
+    if (this.pollHandle) {
+      clearInterval(this.pollHandle);
+      this.pollHandle = null;
+    }
+  }
+
+  refresh(): void {
+    if (!this.tokenStorage.getAccessToken()) {
+      return;
+    }
+    this.http
+      .get<PageResponse<NotificationResponse>>(this.baseUrl, {
+        params: new HttpParams()
+          .set('page', '0')
+          .set('size', '50')
+          .set('sort', 'scheduledAt,desc'),
+      })
+      .subscribe({
+        next: (page) => this.notificationsSignal.set(page.content.map(fromResponse)),
+        error: (err) => {
+          console.error('Failed to load notifications', err);
+        },
+      });
+  }
 
   setFilter(filter: NotificationFilter): void {
     this.filter.set(filter);
