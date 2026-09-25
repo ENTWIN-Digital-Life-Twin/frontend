@@ -4,7 +4,7 @@ import {
   LucideCalendarDays,
   LucideDynamicIcon,
   LucideListChecks,
-  LucideSparkles,
+  LucideRefreshCw,
   LucideTarget,
   LucideTimer,
 } from '@lucide/angular';
@@ -22,7 +22,7 @@ import type { LucideIcon } from '@lucide/angular';
   imports: [
     Button,
     LucideDynamicIcon,
-    LucideSparkles,
+    LucideRefreshCw,
     LucideCalendarClock,
     LucideListChecks,
     LucideTimer,
@@ -32,8 +32,8 @@ import type { LucideIcon } from '@lucide/angular';
   template: `
     <aside class="flex flex-col gap-4">
       <button appButton variant="primary" size="md" class="w-full" (click)="plan.emit()">
-        <svg lucideSparkles class="h-4 w-4" aria-hidden="true"></svg>
-        {{ planDay() }}
+        <svg lucideRefreshCw class="h-4 w-4" aria-hidden="true"></svg>
+        {{ refreshPlanning() }}
       </button>
 
       <button appButton variant="secondary" size="md" class="w-full" (click)="create.emit()">
@@ -123,7 +123,7 @@ export class PlanningSidebar {
   protected readonly plan = output<void>();
   protected readonly create = output<void>();
 
-  protected readonly planDay = this.languageService.translateSignal('planning.sidebar.planDay');
+  protected readonly refreshPlanning = this.languageService.translateSignal('planning.sidebar.refresh');
   protected readonly addEntry = this.languageService.translateSignal('planning.sidebar.addEntry');
   protected readonly todayTitle = this.languageService.translateSignal('planning.sidebar.today');
   protected readonly tasks = this.languageService.translateSignal('planning.sidebar.tasks');

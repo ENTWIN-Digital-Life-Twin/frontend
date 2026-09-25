@@ -1,35 +1,22 @@
 import { Component, inject, output } from '@angular/core';
-import {
-  LucideCalendarClock,
-  LucideCalendarPlus,
-  LucideClock,
-  LucidePlus,
-} from '@lucide/angular';
-import { Button } from '../../../../shared/ui/button/button';
+import { LucideCalendarPlus, LucidePlus } from '@lucide/angular';
 import { LanguageService } from '../../../../core/services/language.service';
+import { Button } from '../../../../shared/ui/button/button';
 
-export type QuickActionKind = 'task' | 'event' | 'block' | 'plan';
+export type QuickActionKind = 'task' | 'event';
 
 @Component({
   selector: 'app-planning-quick-actions',
-  imports: [Button, LucidePlus, LucideCalendarPlus, LucideClock, LucideCalendarClock],
+  imports: [Button, LucidePlus, LucideCalendarPlus],
   template: `
-    <div class="grid grid-cols-2 gap-2">
-      <button appButton variant="secondary" size="md" (click)="create.emit('task')">
-        <svg lucidePlus class="h-4 w-4 text-accent-dark" aria-hidden="true"></svg>
-        {{ t('dashboard.quickActions.newTask') }}
+    <div class="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 lg:w-auto">
+      <button appButton variant="secondary" size="md" class="min-w-0 justify-center" (click)="create.emit('task')">
+        <svg lucidePlus class="h-4 w-4 shrink-0 text-accent-dark" aria-hidden="true"></svg>
+        <span class="truncate">{{ t('dashboard.quickActions.newTask') }}</span>
       </button>
-      <button appButton variant="secondary" size="md" (click)="create.emit('event')">
-        <svg lucideCalendarPlus class="h-4 w-4 text-accent-dark" aria-hidden="true"></svg>
-        {{ t('dashboard.quickActions.newEvent') }}
-      </button>
-      <button appButton variant="secondary" size="md" (click)="create.emit('block')">
-        <svg lucideClock class="h-4 w-4 text-accent-dark" aria-hidden="true"></svg>
-        {{ t('planningExtended.timeBlock') }}
-      </button>
-      <button appButton variant="primary" size="md" (click)="create.emit('plan')">
-        <svg lucideCalendarClock class="h-4 w-4" aria-hidden="true"></svg>
-        {{ t('dashboard.quickActions.planDay') }}
+      <button appButton variant="secondary" size="md" class="min-w-0 justify-center" (click)="create.emit('event')">
+        <svg lucideCalendarPlus class="h-4 w-4 shrink-0 text-accent-dark" aria-hidden="true"></svg>
+        <span class="truncate">{{ t('dashboard.quickActions.newEvent') }}</span>
       </button>
     </div>
   `,

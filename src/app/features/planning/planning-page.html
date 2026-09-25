@@ -1,0 +1,53 @@
+<div class="planning-page mx-auto w-full max-w-[1600px] px-4 py-5 sm:px-6 sm:py-7 lg:px-8 lg:py-8">
+  <div class="flex flex-col gap-7 lg:gap-8">
+    <app-planning-header />
+
+    @if (service.loading()) {
+      <section class="flex min-h-72 items-center justify-center rounded-card border border-line bg-surface p-6 text-sm text-ink-muted shadow-card" aria-live="polite">
+        {{ loadingLabel() }}
+      </section>
+    } @else if (service.error()) {
+      <section class="flex min-h-72 flex-col items-center justify-center gap-4 rounded-card border border-danger/30 bg-danger-light/30 p-6 text-center shadow-card" role="alert">
+        <p class="max-w-md text-sm leading-relaxed text-ink-muted">{{ loadError() }}</p>
+        <button appButton variant="secondary" size="md" type="button" (click)="service.retry()">
+          {{ retryLabel() }}
+        </button>
+      </section>
+    } @else {
+      <div class="grid min-w-0 gap-7 xl:grid-cols-[minmax(0,1fr)_320px] xl:gap-8">
+        <main class="min-w-0 space-y-7">
+          <app-planning-summary />
+          <app-planning-week />
+
+          <section class="flex flex-col gap-4 rounded-card border border-line bg-surface p-4 shadow-soft sm:p-5 lg:flex-row lg:items-center lg:justify-between">
+            <app-planning-filters class="min-w-0 flex-1" />
+            <app-planning-quick-actions class="shrink-0" (create)="onQuickAction($event)" />
+          </section>
+
+          <app-planning-timeline (edit)="onEdit($event)" />
+        </main>
+
+        <app-planning-sidebar
+          class="w-full min-w-0 xl:sticky xl:top-6 xl:self-start"
+          (plan)="onRefresh()"
+          (create)="onAdd()"
+        />
+      </div>
+    }
+  </div>
+</div>
+
+@if (modal() === 'task') {
+  <app-planning-modal-task [entry]="editing()" (saved)="onSaved($event)" (closed)="onClose()" />
+}
+@if (modal() === 'event') {
+  <app-planning-modal-event [entry]="editing()" (saved)="onSaved($event)" (closed)="onClose()" />
+}
+
+@if (service.selectedEntry(); as entry) {
+  <app-entry-details [entry]="entry" (closed)="service.closeEntry()" (edit)="onEdit($event)" />
+}
+
+@if (toast(); as message) {
+  <app-toast [message]="message" [tone]="toastTone()" (closed)="toast.set(null)" />
+}
