@@ -22,7 +22,7 @@ import {
             <div class="min-w-0">
               <app-badge [variant]="badgeVariant()" [dot]="true">{{ MEAL_TYPE_LABELS()[meal().type] }}</app-badge>
               <h2 class="mt-2 font-display text-xl font-semibold tracking-tight text-primary">
-                {{ t(meal().name) }}
+                {{ meal().name }}
               </h2>
               <p class="mt-1 text-sm text-ink-muted">{{ meal().time }} · {{ formatKcal(meal().calories) }} kcal</p>
             </div>
@@ -82,7 +82,7 @@ import {
                   <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-panel bg-teal-50 text-accent-dark">
                     <svg lucideUtensils class="h-4 w-4" aria-hidden="true"></svg>
                   </span>
-                  <span class="text-sm font-medium text-ink">{{ t(food) }}</span>
+                  <span class="text-sm font-medium text-ink">{{ food }}</span>
                 </li>
               }
             </ul>
@@ -94,7 +94,7 @@ import {
                 {{ notesLabel() }}
               </h3>
               <p class="mt-2 rounded-panel border border-line bg-surface-muted/50 p-3 text-sm leading-relaxed text-ink">
-                {{ t(meal().notes ?? '') }}
+                {{ meal().notes }}
               </p>
             </section>
           }
@@ -121,10 +121,6 @@ export class MealDetails {
   readonly deleteMeal = output<Meal>();
 
   private readonly languageService = inject(LanguageService);
-
-  protected t(key: string): string {
-    return this.languageService.translate(key);
-  }
 
   protected readonly formatKcal = formatKcal;
   protected readonly formatGrams = formatGrams;
