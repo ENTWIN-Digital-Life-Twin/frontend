@@ -1,4 +1,4 @@
-import { generateReply, makeId } from '../../ai/models/ai.models';
+import { makeId } from '../../ai/models/ai.models';
 
 export type AssistantMessage =
   | {
@@ -152,5 +152,5 @@ export function assistantReply(question: string): string {
   if (normalized.includes('partir') || normalized.includes('reunion')) {
     return 'assistantPage.replies.departure';
   }
-  return generateReply(question);
+  return 'assistantPage.replies.improve';
 }
