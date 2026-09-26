@@ -1,8 +1,9 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { NavigationEnd, Router, RouterOutlet, type ActivatedRoute } from '@angular/router';
 import { filter } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SeoService, type SeoConfig } from './core/services/seo/seo.service';
+import { LanguageService } from './core/services/language.service';
 
 @Component({
   selector: 'app-root',
@@ -13,7 +14,19 @@ import { SeoService, type SeoConfig } from './core/services/seo/seo.service';
 export class App {
   private readonly router = inject(Router);
   private readonly seo = inject(SeoService);
+  private readonly languageService = inject(LanguageService);
+
   readonly routeLoading = signal(!this.router.navigated);
+
+  protected readonly loadingTitle = computed(() => {
+    const value = this.languageService.translate<string>('app.loadingTitle');
+    return value === 'app.loadingTitle' ? 'Digital Life Twin' : value;
+  });
+
+  protected readonly loadingLabel = computed(() => {
+    const value = this.languageService.translate<string>('app.loadingLabel');
+    return value === 'app.loadingLabel' ? 'Chargement de votre espace…' : value;
+  });
 
   constructor() {
     this.router.events

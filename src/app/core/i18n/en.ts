@@ -96,6 +96,10 @@ export const EN_TRANSLATIONS = {
       hourShort: 'h',
     },
   },
+  app: {
+    loadingTitle: 'Preparing your space',
+    loadingLabel: 'Loading your day, priorities and well-being…',
+  },
   adminPage: {
     eyebrow: 'Platform',
     title: 'Administration',

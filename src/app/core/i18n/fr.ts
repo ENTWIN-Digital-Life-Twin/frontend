@@ -96,6 +96,10 @@ export const FR_TRANSLATIONS = {
       hourShort: 'h',
     },
   },
+  app: {
+    loadingTitle: 'Préparation de votre espace',
+    loadingLabel: 'Chargement de votre journée, priorités et bien-être…',
+  },
   adminPage: {
     eyebrow: 'Plateforme',
     title: 'Administration',
