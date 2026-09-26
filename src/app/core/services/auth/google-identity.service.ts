@@ -1,7 +1,9 @@
 import { Injectable, NgZone, inject } from '@angular/core';
+import { GoogleSignIn } from '@capawesome/capacitor-google-sign-in';
 import { Observable, from, throwError } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
+import { isNativeApp } from '../../platform';
 
 const GIS_SCRIPT_ID = 'google-gis-client';
 const GIS_SCRIPT_SRC = 'https://accounts.google.com/gsi/client';
@@ -36,12 +38,39 @@ interface GoogleAccountsId {
 export class GoogleIdentityService {
   private readonly zone = inject(NgZone);
   private scriptPromise?: Promise<void>;
+  private nativeReady?: Promise<void>;
 
   requestIdToken(): Observable<string> {
     if (!environment.googleClientId) {
       return throwError(() => new Error('google_not_configured'));
     }
+    if (isNativeApp()) {
+      return from(this.nativeIdToken());
+    }
     return from(this.ensureScript()).pipe(switchMap(() => this.promptForCredential()));
+  }
+
+  private async nativeIdToken(): Promise<string> {
+    this.nativeReady ??= GoogleSignIn.initialize({
+      clientId: environment.googleClientId,
+    });
+    await this.nativeReady;
+    try {
+      const result = await GoogleSignIn.signIn();
+      if (!result.idToken) {
+        throw new Error('google_auth_failed');
+      }
+      return result.idToken;
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith('google_')) {
+        throw error;
+      }
+      const code = (error as { code?: string }).code;
+      if (code === 'SIGN_IN_CANCELED') {
+        throw new Error('google_popup_closed');
+      }
+      throw new Error('google_login_failed');
+    }
   }
 
   private promptForCredential(): Observable<string> {

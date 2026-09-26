@@ -1,5 +1,7 @@
 # --- Build stage -----------------------------------------------------------
-FROM node:22-alpine AS build
+# Angular's production build needs more than the 1 GB on a t3.micro.
+# Add 2 GB of swap on the server before `docker compose build`, or this stage is killed.
+FROM node:22-bookworm-slim AS build
 WORKDIR /app
 
 COPY package.json package-lock.json ./
@@ -7,6 +9,7 @@ RUN npm ci --legacy-peer-deps
 
 COPY . .
 
+ENV NODE_OPTIONS=--max-old-space-size=2048
 RUN npm run build -- --configuration production
 
 # --- Runtime stage -----------------------------------------------------------

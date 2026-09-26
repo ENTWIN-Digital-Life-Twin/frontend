@@ -11,7 +11,7 @@
             {{ successText() }}
           </p>
         </div>
-        <button appButton variant="primary" size="lg" class="w-full sm:w-auto" (click)="goToDashboard()">
+        <button appButton variant="primary" size="lg" class="h-12 w-full" (click)="goToDashboard()">
           {{ goDashboard() }}
         </button>
       </div>
@@ -192,31 +192,31 @@
           }
         </div>
 
-        <div class="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <button
-            appButton
-            variant="secondary"
-            type="button"
-            class="w-full sm:w-auto sm:min-w-28"
-            [class.invisible]="step() === 0"
-            [class.max-sm:hidden]="step() === 0"
-            (click)="onBack()"
-            [disabled]="status() === 'loading'"
-          >
-            <svg lucideArrowLeft class="mirror-rtl h-4 w-4" aria-hidden="true"></svg>
-            {{ backLabel() }}
-          </button>
+        <div class="mt-8 flex flex-col gap-3">
           <button
             appButton
             [variant]="step() === STEP_COUNT - 1 ? 'accent' : 'primary'"
             type="submit"
-            class="w-full sm:min-w-40 sm:flex-none"
+            class="h-12 w-full"
             size="lg"
             [loading]="status() === 'loading'"
             [disabled]="status() === 'loading'"
           >
             {{ primaryLabel() }}
           </button>
+          @if (step() !== 0) {
+            <button
+              appButton
+              variant="secondary"
+              type="button"
+              class="h-12 w-full"
+              (click)="onBack()"
+              [disabled]="status() === 'loading'"
+            >
+              <svg lucideArrowLeft class="mirror-rtl h-4 w-4" aria-hidden="true"></svg>
+              {{ backLabel() }}
+            </button>
+          }
         </div>
       </form>
 

@@ -1,7 +1,8 @@
 import { Component, computed, inject, output } from '@angular/core';
-import { ACCOUNT_ITEMS, NAV_SECTIONS } from '../../../core/models/navigation';
+import { ACCOUNT_ITEMS, ADMIN_ITEM, NAV_SECTIONS } from '../../../core/models/navigation';
 import { BrandLogo } from '../../../shared/components/brand-logo/brand-logo';
 import { SidebarNavItem } from '../sidebar-nav-item/sidebar-nav-item';
+import { AuthService } from '../../../core/services/auth/auth.service';
 import { LanguageService } from '../../../core/services/language.service';
 
 @Component({
@@ -42,7 +43,7 @@ import { LanguageService } from '../../../core/services/language.service';
           {{ accountLabel() }}
         </p>
         <ul class="space-y-1">
-          @for (item of accountItems; track item.path) {
+          @for (item of accountItems(); track item.path) {
             <li>
               <app-sidebar-nav-item [item]="item" (navigate)="onNavigate()" />
             </li>
@@ -60,6 +61,7 @@ export class SidebarContent {
   readonly navigate = output<void>();
 
   private readonly languageService = inject(LanguageService);
+  private readonly auth = inject(AuthService);
 
   protected readonly accountLabel = computed(() =>
     this.languageService.translate<string>('sidebar.account.title'),
@@ -76,7 +78,11 @@ export class SidebarContent {
     })),
   );
 
-  protected readonly accountItems = ACCOUNT_ITEMS;
+  protected readonly accountItems = computed(() =>
+    this.auth.currentUser()?.role === 'admin'
+      ? [...ACCOUNT_ITEMS, ADMIN_ITEM]
+      : ACCOUNT_ITEMS,
+  );
 
   protected onNavigate(): void {
     this.navigate.emit();

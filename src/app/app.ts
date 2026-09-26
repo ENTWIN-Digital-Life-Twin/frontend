@@ -4,6 +4,7 @@ import { filter } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SeoService, type SeoConfig } from './core/services/seo/seo.service';
 import { LanguageService } from './core/services/language.service';
+import { requestNotificationPermission } from './core/services/notifications/notification-permission';
 
 @Component({
   selector: 'app-root',
@@ -29,6 +30,7 @@ export class App {
   });
 
   constructor() {
+    void requestNotificationPermission();
     this.router.events
       .pipe(
         filter((event): event is NavigationEnd => event instanceof NavigationEnd),

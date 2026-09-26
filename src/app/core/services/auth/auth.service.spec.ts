@@ -103,3 +103,80 @@ describe('AuthService Google login', () => {
     expect(code).toBe('invalid_google_token');
   });
 });
+
+describe('AuthService admin API', () => {
+  let service: AuthService;
+  let httpMock: HttpTestingController;
+
+  const profileBody = {
+    id: 'user-2',
+    firstName: 'Jane',
+    lastName: 'Doe',
+    email: 'jane@example.com',
+    dateOfBirth: null,
+    gender: null,
+    heightCm: null,
+    weightKg: null,
+    occupationType: null,
+    preferredLanguage: 'en',
+    timezone: 'UTC',
+    accountStatus: 'ACTIVE',
+    emailVerified: true,
+    roles: ['USER'],
+    bio: null,
+    createdAt: '2026-01-01T00:00:00Z',
+    lastLoginAt: null,
+  };
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        AuthService,
+        { provide: TokenStorageService, useValue: { setTokens: vi.fn() } },
+      ],
+    });
+    service = TestBed.inject(AuthService);
+    httpMock = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => {
+    httpMock.verify();
+  });
+
+  it('maps createdAt when listing admin users', () => {
+    let createdAt = '';
+    service.adminUsers().subscribe((users) => {
+      createdAt = users[0]?.createdAt ?? '';
+    });
+
+    httpMock.expectOne(`${environment.authApiUrl}/users/admin/users`).flush([profileBody]);
+    expect(createdAt).toBe('2026-01-01T00:00:00Z');
+  });
+
+  it('patches a user role', () => {
+    let roles: string[] = [];
+    service.updateUserRole('user-2', 'ADMIN').subscribe((user) => {
+      roles = user.roles;
+    });
+
+    const req = httpMock.expectOne(`${environment.authApiUrl}/users/admin/users/user-2/role`);
+    expect(req.request.method).toBe('PATCH');
+    expect(req.request.body).toEqual({ role: 'ADMIN' });
+    req.flush({ ...profileBody, roles: ['ADMIN', 'USER'] });
+    expect(roles).toEqual(['ADMIN', 'USER']);
+  });
+
+  it('deletes a contact message', () => {
+    let completed = false;
+    service.deleteContact('msg-1').subscribe(() => {
+      completed = true;
+    });
+
+    const req = httpMock.expectOne(`${environment.authApiUrl}/users/admin/contacts/msg-1`);
+    expect(req.request.method).toBe('DELETE');
+    req.flush(null);
+    expect(completed).toBe(true);
+  });
+});

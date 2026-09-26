@@ -28,9 +28,10 @@ const STORY_ICONS: readonly LucideIcon[] = [
 
 @Component({
   selector: 'app-auth-brand-panel',
+  host: { class: 'relative hidden min-h-dvh self-stretch lg:block' },
   template: `
     <aside
-      class="relative hidden min-h-dvh overflow-hidden bg-primary-darker text-white lg:block"
+      class="absolute inset-0 overflow-hidden bg-primary-darker text-white"
       aria-label="Digital Life Twin"
     >
       <div class="absolute inset-0 bg-grid-light opacity-50" aria-hidden="true"></div>
@@ -44,7 +45,7 @@ const STORY_ICONS: readonly LucideIcon[] = [
         aria-hidden="true"
       ></div>
 
-      <div class="relative flex h-full min-h-dvh flex-col justify-between gap-6 px-8 py-10 xl:px-14">
+      <div class="relative flex h-full min-h-full flex-col justify-between gap-6 px-8 py-10 xl:px-14">
         <app-brand-logo tone="light" size="lg" />
 
         <div class="max-w-lg">

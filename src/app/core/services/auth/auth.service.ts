@@ -41,6 +41,8 @@ export interface UserProfile {
   emailVerified: boolean;
   roles: string[];
   bio: string | null;
+  createdAt: string | null;
+  lastLoginAt: string | null;
 }
 
 export interface UpdateProfilePayload {
@@ -80,6 +82,8 @@ interface UserProfileResponse {
   emailVerified: boolean;
   roles: string[];
   bio?: string | null;
+  createdAt?: string | null;
+  lastLoginAt?: string | null;
 }
 
 interface AuthResponse {
@@ -172,6 +176,8 @@ function toProfile(response: UserProfileResponse): UserProfile {
     emailVerified: Boolean(response.emailVerified),
     roles: response.roles ?? [],
     bio: response.bio ?? null,
+    createdAt: response.createdAt ?? null,
+    lastLoginAt: response.lastLoginAt ?? null,
   };
 }
 
@@ -365,6 +371,18 @@ export class AuthService {
         accountStatus,
       })
       .pipe(map(toProfile));
+  }
+
+  updateUserRole(userId: string, role: 'ADMIN' | 'USER'): Observable<UserProfile> {
+    return this.http
+      .patch<UserProfileResponse>(`${this.usersUrl}/admin/users/${userId}/role`, { role })
+      .pipe(map(toProfile));
+  }
+
+  deleteContact(contactId: string): Observable<void> {
+    return this.http
+      .delete<void>(`${this.usersUrl}/admin/contacts/${contactId}`)
+      .pipe(map(() => void 0));
   }
 
   setCurrentUser(user: User | null): void {

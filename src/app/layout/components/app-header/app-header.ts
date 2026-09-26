@@ -7,6 +7,7 @@ import {
   LucideMenu,
   LucideSearch,
   LucideSettings,
+  LucideShield,
   LucideUser,
   LucideX,
 } from '@lucide/angular';
@@ -44,6 +45,7 @@ import { NotificationService } from '../../../features/notifications/services/no
     LucideMenu,
     LucideSearch,
     LucideSettings,
+    LucideShield,
     LucideUser,
     LucideX,
   ],
@@ -256,6 +258,12 @@ import { NotificationService } from '../../../features/notifications/services/no
                 <svg lucideSettings class="h-4 w-4 shrink-0" aria-hidden="true"></svg>
                 <span>{{ settingsLabel() }}</span>
               </a>
+              @if (isAdmin()) {
+                <a routerLink="/admin" appDropdownItem class="text-ink-muted">
+                  <svg lucideShield class="h-4 w-4 shrink-0" aria-hidden="true"></svg>
+                  <span>{{ adminLabel() }}</span>
+                </a>
+              }
               <div class="my-1 h-px bg-line" aria-hidden="true"></div>
               <button
                 type="button"
@@ -294,6 +302,7 @@ export class Header {
   protected readonly searchFocused = signal(false);
 
   protected readonly user = this.authService.currentUser;
+  protected readonly isAdmin = computed(() => this.user()?.role === 'admin');
 
   protected readonly userName = computed(() => {
     const user = this.user();
@@ -312,6 +321,7 @@ export class Header {
   protected readonly profileMenuLabel = this.languageService.translateSignal('header.profileMenu');
   protected readonly profileLabel = this.languageService.translateSignal('header.profile');
   protected readonly settingsLabel = this.languageService.translateSignal('header.settings');
+  protected readonly adminLabel = this.languageService.translateSignal('header.admin');
   protected readonly logoutLabel = this.languageService.translateSignal('header.logout');
   protected readonly clearLabel = this.languageService.translateSignal('search.clear');
   protected readonly cancelLabel = this.languageService.translateSignal('search.cancel');

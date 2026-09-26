@@ -19,7 +19,8 @@ import {
   type LucideIcon,
 } from '@lucide/angular';
 import { LanguageService } from './language.service';
-import { ALL_NAV_ITEMS, NAV_SECTIONS, ACCOUNT_ITEMS, ADMIN_ITEM, type NavItem } from '../models/navigation';
+import { AuthService } from './auth/auth.service';
+import { ALL_NAV_ITEMS } from '../models/navigation';
 import { TaskService } from '../../features/tasks/services/task.service';
 import { CalendarService } from '../../features/calendar/services/calendar.service';
 import { NotificationService } from '../../features/notifications/services/notification.service';
@@ -72,6 +73,7 @@ const CATEGORY_LABELS: Record<SearchCategory, string> = {
 @Injectable({ providedIn: 'root' })
 export class GlobalSearchService {
   private readonly languageService = inject(LanguageService);
+  private readonly auth = inject(AuthService);
   private readonly taskService = inject(TaskService);
   private readonly calendarService = inject(CalendarService);
   private readonly notificationService = inject(NotificationService);
@@ -92,7 +94,11 @@ export class GlobalSearchService {
     const t = (key: string) => this.languageService.translate(key);
 
     // A. Navigation / pages
+    const canOpenAdmin = this.auth.currentUser()?.role === 'admin';
     for (const nav of ALL_NAV_ITEMS) {
+      if (nav.path === '/admin' && !canOpenAdmin) {
+        continue;
+      }
       results.push({
         id: `nav-${nav.path}`,
         category: 'pages',

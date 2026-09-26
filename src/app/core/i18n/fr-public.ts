@@ -9,6 +9,18 @@
  * live in `fr.ts` and are lazy-loaded after first paint.
  */
 export const FR_PUBLIC = {
+  welcome: {
+    splashSubtitle: 'Votre journée, clarifiée',
+    skip: 'Passer',
+    next: 'Suivant',
+    start: 'Se connecter',
+    slide1Title: 'Organisez votre journée',
+    slide1Body: 'Planning, tâches et calendrier restent au même endroit.',
+    slide2Title: 'Suivez votre équilibre',
+    slide2Body: 'Sommeil, hydratation, repas et sport, sans tableau compliqué.',
+    slide3Title: 'Demandez à l’assistant',
+    slide3Body: 'Une question sur votre journée, une réponse à partir de vos données.',
+  },
   sidebar: {
     brand: 'Digital Life Twin',
     subtitle: 'Votre journée, clarifiée',
@@ -76,6 +88,7 @@ export const FR_PUBLIC = {
     profileMenu: 'Menu du compte',
     roleUser: 'Utilisateur',
     roleAdmin: 'Administrateur',
+    admin: 'Administration',
     language: 'Langue',
     openMenu: 'Ouvrir le menu',
   },
