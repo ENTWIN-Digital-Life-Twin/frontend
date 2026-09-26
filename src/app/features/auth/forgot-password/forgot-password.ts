@@ -41,7 +41,7 @@ import { environment } from '../../../../environments/environment';
             </button>
           }
         } @else {
-          <form [formGroup]="form" (ngSubmit)="onSubmit()" class="mt-7 space-y-5" novalidate>
+          <form [formGroup]="form" (ngSubmit)="onSubmit()" class="mt-7 flex flex-col gap-5" novalidate>
             @if (status() === 'error') {
               <div class="flex items-start gap-3 rounded-panel border border-danger/30 bg-danger-light px-4 py-3" role="alert">
                 <svg lucideInfo class="mt-0.5 h-4 w-4 shrink-0 text-danger" aria-hidden="true"></svg>

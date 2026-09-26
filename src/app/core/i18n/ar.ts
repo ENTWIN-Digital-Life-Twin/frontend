@@ -38,6 +38,9 @@ export const AR_TRANSLATIONS = {
     admin: {
       title: 'الإدارة',
     },
+    bottom: {
+      more: 'المزيد',
+    },
     descriptions: {
       dashboard: 'نظرة عامة على يومك وأهدافك.',
       planning: 'نظّم وقتك وأولوياتك.',

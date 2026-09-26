@@ -3,6 +3,7 @@ import { LucideCircleAlert } from '@lucide/angular';
 
 @Component({
   selector: 'app-field',
+  host: { class: 'block' },
   template: `
     <div class="flex flex-col gap-1.5">
       @if (label()) {

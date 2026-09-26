@@ -2,6 +2,7 @@ import { Component, input } from '@angular/core';
 
 @Component({
   selector: 'app-auth-heading',
+  host: { class: 'block' },
   template: `
     <div class="flex flex-col gap-2">
       @if (eyebrow()) {

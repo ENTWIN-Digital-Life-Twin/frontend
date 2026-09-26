@@ -6,6 +6,7 @@ import { Header } from '../app-header/app-header';
 import { Sidebar } from '../app-sidebar/app-sidebar';
 import { SidebarContent } from '../sidebar-content/sidebar-content';
 import { Drawer } from '../../../shared/ui/drawer/drawer';
+import { BottomNav } from '../bottom-nav/bottom-nav';
 import { NotificationService } from '../../../features/notifications/services/notification.service';
 import { ReminderService } from '../../../features/notifications/services/reminder.service';
 
@@ -15,19 +16,21 @@ import { ReminderService } from '../../../features/notifications/services/remind
     <div class="min-h-dvh bg-background">
       <app-sidebar />
 
-      <div class="min-h-dvh lg:ps-[280px]">
+      <div class="min-h-dvh pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:ps-[280px] lg:pb-0">
         <app-header (menu)="drawerOpen.set(true)" />
         <main #page class="mx-auto w-full max-w-[1320px] px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
           <router-outlet />
         </main>
       </div>
 
+      <app-bottom-nav (more)="drawerOpen.set(true)" />
+
       <app-drawer [(open)]="drawerOpen" side="left" tone="navy">
         <app-sidebar-content (navigate)="drawerOpen.set(false)" />
       </app-drawer>
     </div>
   `,
-  imports: [RouterOutlet, Header, Sidebar, SidebarContent, Drawer],
+  imports: [RouterOutlet, Header, Sidebar, SidebarContent, Drawer, BottomNav],
 })
 export class AppShell {
   readonly drawerOpen = signal(false);

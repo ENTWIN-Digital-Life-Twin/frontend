@@ -38,6 +38,9 @@ export const EN_TRANSLATIONS = {
     admin: {
       title: 'Administration',
     },
+    bottom: {
+      more: 'More',
+    },
     descriptions: {
       dashboard: 'Overview of your day and goals.',
       planning: 'Organize your time and priorities.',
