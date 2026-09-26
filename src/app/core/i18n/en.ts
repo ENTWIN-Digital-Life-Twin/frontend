@@ -93,11 +93,30 @@ export const EN_TRANSLATIONS = {
       hourShort: 'h',
     },
   },
+  adminPage: {
+    eyebrow: 'Platform',
+    title: 'Administration',
+    description: 'Users, account status and contact messages.',
+    users: 'Users',
+    active: 'Active',
+    admins: 'Admins',
+    contacts: 'Messages',
+    usersTitle: 'Accounts',
+    contactsTitle: 'Contact messages',
+    name: 'Name',
+    email: 'Email',
+    status: 'Status',
+    roles: 'Roles',
+    disable: 'Disable',
+    enable: 'Enable',
+    noContacts: 'No contact messages yet.',
+  },
   settings: {
     title: 'Settings',
     subtitle: 'Personalize your account, your experience and your preferences.',
     nav: {
       account: 'Account',
+      security: 'Security',
       appearance: 'Appearance',
       notifications: 'Notifications',
       preferences: 'Preferences',
@@ -127,6 +146,21 @@ export const EN_TRANSLATIONS = {
       emailRequired: 'Email address is required.',
       emailInvalid: 'Invalid email address.',
       toastUpdated: 'Changes saved successfully.',
+      emailPlaceholder: 'you@example.com',
+    },
+    security: {
+      subtitle: 'Change your password or reset it by email.',
+      passwordTitle: 'Password',
+      changePassword: 'Update password',
+      currentPassword: 'Current password',
+      newPassword: 'New password',
+      confirmPassword: 'Confirm new password',
+      savePassword: 'Save password',
+      resetTitle: 'Reset by email',
+      resetHint: 'We can send a one-time link to your inbox if you no longer have your current password.',
+      resetAction: 'Send reset email',
+      toastUpdated: 'Password updated.',
+      toastFailed: 'Could not update the password. Check your current password and try again.',
     },
     accessibility: {
       subtitle: 'Adapt the experience to your needs.',
@@ -432,7 +466,11 @@ export const EN_TRANSLATIONS = {
       typeAria: 'Data type',
       quantity: 'Water amount',
       hydrationHint: 'Each intake is added to the day’s tracking.',
-      sleepHint: 'Duration is calculated automatically.',
+      sleepDuration: 'Sleep duration',
+      sleepHours: 'Hours',
+      sleepMinutes: 'Minutes',
+      sleepHint:
+        'Duration is the time between bedtime and wake-up, including nights that cross midnight. Type hours and minutes to set wake time automatically.',
       moodAria: 'Mood',
       stressAria: 'Stress',
       activityDuration: 'Activity duration',
@@ -753,6 +791,8 @@ export const EN_TRANSLATIONS = {
     activeMinutes: 'Active minutes',
     caloriesBurned: 'kcal burned',
     stepsToday: 'Steps today',
+    logSteps: 'Log steps',
+    saveSteps: 'Save',
     minutesThisWeek: 'min this week',
     activity: 'Activity',
     thisWeek: 'This week',
@@ -766,6 +806,7 @@ export const EN_TRANSLATIONS = {
       cycling: 'Cycling',
       gym: 'Gym',
       stretching: 'Stretching',
+      other: 'Other',
     },
     history: 'History',
     yourSessions: 'Your sessions',
@@ -810,6 +851,8 @@ export const EN_TRANSLATIONS = {
     },
     emptyTitle: 'No notifications',
     emptyDescription: 'You are all caught up. Your reminders and recommendations will appear here.',
+    upcomingTitle: 'Upcoming reminders',
+    upcomingEmpty: 'No upcoming reminders. Add one when you create an event.',
     open: 'Open: {{title}}',
     markRead: 'Mark as read',
     deleteNotification: 'Delete notification',
@@ -1025,7 +1068,14 @@ export const EN_TRANSLATIONS = {
       'Is my day too busy?',
       'When should I leave for my meeting?',
       'How can I improve my day?',
+      'Create a task: finish my weekly report',
     ],
+    createTask: 'Create this task',
+    taskCreated: 'Task added to your list.',
+    taskCreateFailed: 'The task could not be created. Try again from Tasks.',
+  },
+  formAssist: {
+    heading: 'AI suggestions',
   },
   profile: {
     eyebrow: 'Account',
@@ -1107,6 +1157,8 @@ export const EN_TRANSLATIONS = {
     notes: 'Notes',
     notesPlaceholder: 'Notes, links, resources…',
     titleRequired: 'The title is required.',
+    aiHint: 'AI suggestions',
+    apply: 'Use',
   },
   tasksDetail: {
     close: 'Close details',
@@ -1156,6 +1208,7 @@ export const EN_TRANSLATIONS = {
     titleRequired: 'The title is required.',
     save: 'Save',
     create: 'Create event',
+    aiHint: 'AI suggestions',
     reminders: {
       none: 'No reminder',
       '5': '5 min before',
@@ -1325,13 +1378,17 @@ export const EN_TRANSLATIONS = {
   nutritionForm: {
     editTitle: 'Edit meal',
     newTitle: 'Add a meal',
-    subtitle: 'Enter the nutritional information of the meal.',
+    subtitle: 'Pick the meal, then add each food with its quantity. Calories and macros are calculated automatically.',
     type: 'Meal type',
     time: 'Time',
     name: 'Meal name',
     namePlaceholder: 'E.g. Grilled chicken + rice',
     foods: 'Foods',
-    foodsHint: 'Separate foods with commas.',
+    foodsHint: 'Select a food and enter the quantity in grams (e.g. Rice 100 g).',
+    addFood: 'Add a food',
+    customName: 'Custom name',
+    searchMeals: 'Search meals',
+    noMealMatch: 'No meal matches that name.',
     foodsPlaceholder: 'E.g. Grilled chicken, brown rice, steamed vegetables',
     calories: 'Calories (kcal)',
     protein: 'Protein (g)',
@@ -1349,7 +1406,7 @@ export const EN_TRANSLATIONS = {
   sportForm: {
     editTitle: 'Edit activity',
     newTitle: 'Add an activity',
-    subtitle: 'Record your session: type, duration, distance and calories.',
+    subtitle: 'Pick the activity and duration. Calories and intensity are calculated automatically.',
     type: 'Activity type',
     title: 'Title',
     titlePlaceholder: 'Morning jog',
@@ -1363,6 +1420,7 @@ export const EN_TRANSLATIONS = {
     notesPlaceholder: 'Feeling, route, equipment…',
     save: 'Save',
     titleRequired: 'The title is required.',
+    durationRequired: 'Duration must be at least 5 minutes.',
     intensityOptions: {
       low: 'Light',
       medium: 'Moderate',
@@ -1447,6 +1505,7 @@ export const EN_TRANSLATIONS = {
       primary: 'Primary navigation',
       mobile: 'Mobile navigation',
     },
+    weekdaysShort: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
     footer: {
       description:
         'Digital Life Twin centralizes your planning, habits and well-being to help you organize every day better.',
@@ -1456,8 +1515,61 @@ export const EN_TRANSLATIONS = {
       createAccount: 'Create account',
       home: 'Home',
       copyright: '© {{year}} Digital Life Twin. All rights reserved.',
+      terms: 'Terms of use',
+      privacy: 'Privacy policy',
       disclaimer:
         'Well-being indicators — not a substitute for professional medical advice.',
+    },
+    legal: {
+      badge: 'Legal',
+      terms: {
+        title: 'Terms of use',
+        updated: 'Last updated: 26 September 2026',
+        intro:
+          'These terms govern your use of Digital Life Twin (ENTWIN). Creating an account means you accept them.',
+        sections: [
+          {
+            heading: 'What the platform is',
+            body: 'ENTWIN helps you organize planning, habits and well-being. It is not a medical device and does not provide diagnosis, treatment or emergency care.',
+          },
+          {
+            heading: 'Your account',
+            body: 'You are responsible for the accuracy of the information you log and for keeping your password confidential. You can change or reset it from Settings → Security.',
+          },
+          {
+            heading: 'Acceptable use',
+            body: 'Do not misuse the service, attempt unauthorized access, or submit content that is unlawful. We may suspend an account that violates these terms.',
+          },
+          {
+            heading: 'Contact',
+            body: 'Questions about these terms can be sent from the Contact page. ENTWIN is an academic project for educational use.',
+          },
+        ],
+      },
+      privacy: {
+        title: 'Privacy policy',
+        updated: 'Last updated: 26 September 2026',
+        intro:
+          'This policy explains what personal data ENTWIN stores to run your account and wellness tracking.',
+        sections: [
+          {
+            heading: 'Data we store',
+            body: 'We keep the profile you provide (name, email, optional body metrics), your planning and wellness logs, and security data such as password hashes and verification codes.',
+          },
+          {
+            heading: 'Why we use it',
+            body: 'Data is used to authenticate you, personalize dashboards and reminders, send transactional emails (verification and password reset), and improve the product.',
+          },
+          {
+            heading: 'Sharing',
+            body: 'We do not sell your data. Emails are sent through the configured SMTP provider. Google sign-in only receives a verified identity token when you choose that option.',
+          },
+          {
+            heading: 'Your choices',
+            body: 'You can update profile details in Settings, change your password, or contact us to request account deletion.',
+          },
+        ],
+      },
     },
     home: {
       hero: {
@@ -1865,8 +1977,17 @@ export const EN_TRANSLATIONS = {
     social: {
       label: 'or continue with',
       google: 'Google',
-      apple: 'Apple',
-      notice: 'Social login will be available in a future version.',
+      errors: {
+        google_popup_closed: 'Google sign-in was cancelled.',
+        google_auth_failed: 'Google sign-in failed. Try again.',
+        invalid_google_token: 'Google could not be verified. Try again.',
+        account_linking_required:
+          'An account already exists for this email. Sign in with your password.',
+        google_not_configured: 'Google sign-in is not configured.',
+        google_login_failed: 'Google sign-in failed. Try again.',
+        google_script_failed: 'Could not load Google sign-in. Check your connection.',
+        google_email_unverified: 'Google did not provide a verified email.',
+      },
     },
     footer: {
       terms: 'Terms of use',
@@ -1892,9 +2013,36 @@ export const EN_TRANSLATIONS = {
       forgotHint:
         'Password reset will be available in a future version.',
       submit: 'Log in',
+      continue: 'Continue',
+      steps: {
+        email: { title: 'Your email', subtitle: 'We will then ask for your password.' },
+        password: { title: 'Your password', subtitle: 'Sign in to your space.' },
+      },
       noAccount: 'No account yet?',
       createAccount: 'Create account',
       error: 'Incorrect email or password. Check your credentials and try again.',
+    },
+    forgot: {
+      eyebrow: 'Account',
+      title: 'Forgot your password?',
+      subtitle: 'Enter your email. If an account exists, you can reset your password.',
+      submit: 'Send reset link',
+      success: 'If an account exists for this email, a reset link was sent. Check your inbox.',
+      continue: 'Choose a new password',
+      back: 'Back to login',
+      error: 'Unable to start password reset. Try again.',
+    },
+    reset: {
+      eyebrow: 'Account',
+      title: 'New password',
+      subtitle: 'Choose a password with at least 8 characters.',
+      passwordLabel: 'New password',
+      passwordPlaceholder: 'New password',
+      confirmLabel: 'Confirm password',
+      missingToken: 'This reset link is missing or incomplete. Request a new one from the forgot-password page.',
+      submit: 'Update password',
+      success: 'Password updated. You can now log in.',
+      error: 'This reset link is invalid or has expired.',
     },
     register: {
       eyebrow: 'New account',
@@ -1904,8 +2052,19 @@ export const EN_TRANSLATIONS = {
         label: 'Step',
         of: 'of',
         identity: { title: 'Identity', subtitle: 'What is your name?' },
-        account: { title: 'Account', subtitle: 'Your email address' },
+        account: {
+          title: 'Your account',
+          subtitle: 'Name, email and a password.',
+        },
+        verify: {
+          title: 'Verify your email',
+          subtitle: 'Enter the 6-digit code we sent by email.',
+        },
         security: { title: 'Security', subtitle: 'Choose a strong password' },
+        profile: {
+          title: 'About you',
+          subtitle: 'Sex, height and weight help personalize your wellness insights.',
+        },
         terms: {
           title: 'Terms',
           subtitle: 'Read and accept our terms of use',
@@ -1913,6 +2072,10 @@ export const EN_TRANSLATIONS = {
         personalization: {
           title: 'Personalization',
           subtitle: 'Adapt the app to your goals',
+        },
+        goals: {
+          title: 'Your goals',
+          subtitle: 'Sleep, hydration, activity — and accept the terms.',
         },
       },
       confirm: {
@@ -1932,6 +2095,27 @@ export const EN_TRANSLATIONS = {
         water: 'Hydration target',
         activity: 'Activity target',
         dailySummary: 'Daily summary',
+        gender: 'Sex',
+        height: 'Height',
+        weight: 'Weight',
+      },
+      profile: {
+        gender: 'Sex',
+        dateOfBirth: 'Date of birth',
+        height: 'Height (cm)',
+        weight: 'Weight (kg)',
+        occupation: 'Occupation',
+        range: 'Enter a realistic value.',
+        genderOptions: [
+          { value: 'FEMALE', label: 'Female' },
+          { value: 'MALE', label: 'Male' },
+        ],
+        occupationOptions: [
+          { value: 'STUDENT', label: 'Student' },
+          { value: 'EMPLOYEE', label: 'Employee' },
+          { value: 'BOTH', label: 'Student and employee' },
+          { value: 'OTHER', label: 'Other' },
+        ],
       },
       personalization: {
         sleepLabel: 'Sleep target',
@@ -1968,6 +2152,14 @@ export const EN_TRANSLATIONS = {
       emailPlaceholder: 'you@example.com',
       passwordLabel: 'Password',
       confirmLabel: 'Confirm password',
+      codeLabel: 'Verification code',
+      codePlaceholder: '000000',
+      codeHint: 'Check your inbox for a 6-digit code. It expires in 10 minutes.',
+      resend: 'Resend code',
+      emailTaken: 'An account already exists for this email.',
+      codeInvalid: 'This verification code is invalid or expired.',
+      mailFailed: 'We could not send the verification email. Try again in a moment.',
+      error: 'We could not create the account. Try again.',
       termsAria: 'I accept the terms of use',
       termsPrefix: 'I accept the',
       termsLink: 'terms of use',
@@ -1980,6 +2172,14 @@ export const EN_TRANSLATIONS = {
       successTitle: 'Account created!',
       successText: 'Welcome to Digital Life Twin, {{name}}. Your space is ready.',
       goDashboard: 'Go to dashboard',
+    },
+    onboarding: {
+      eyebrow: 'Welcome',
+      title: 'Complete your profile',
+      subtitle:
+        'Google only shares your name and email. Add sex, height, weight and your wellness goals so ENTWIN can personalize planning and insights.',
+      submit: 'Save and continue',
+      error: 'We could not save your profile. Please try again.',
     },
   },
   search: {

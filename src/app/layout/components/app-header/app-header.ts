@@ -23,6 +23,7 @@ import { AuthService } from '../../../core/services/auth/auth.service';
 import { LanguageService } from '../../../core/services/language.service';
 import { GlobalSearchService } from '../../../core/services/global-search.service';
 import { SearchPanel } from '../search-panel/search-panel';
+import { NotificationService } from '../../../features/notifications/services/notification.service';
 
 @Component({
   selector: 'app-header',
@@ -206,9 +207,11 @@ import { SearchPanel } from '../search-panel/search-panel';
             [attr.aria-label]="notificationsLabel()"
           >
             <svg lucideBell class="h-[18px] w-[18px]" aria-hidden="true"></svg>
-            <span
-              class="absolute end-1.5 top-1.5 flex h-2 w-2 rounded-full bg-accent ring-2 ring-background"
-            ></span>
+            @if (unreadCount() > 0) {
+              <span
+                class="absolute end-1.5 top-1.5 flex h-2 w-2 rounded-full bg-accent ring-2 ring-background"
+              ></span>
+            }
           </a>
 
           <app-language-selector tone="surface" />
@@ -279,6 +282,9 @@ export class Header {
 
   protected readonly searchService = inject(GlobalSearchService);
   protected readonly languageService = inject(LanguageService);
+  private readonly notificationService = inject(NotificationService);
+
+  protected readonly unreadCount = this.notificationService.unreadCount;
 
   protected readonly searchInput = viewChild<ElementRef<HTMLInputElement>>('searchInput');
   protected readonly mobileSearchInput = viewChild<ElementRef<HTMLInputElement>>('mobileSearchInput');

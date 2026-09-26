@@ -10,13 +10,14 @@ import { firstValueFrom } from 'rxjs';
 
 import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
+import { analysisRefreshInterceptor } from './core/interceptors/analysis-refresh.interceptor';
 import { AuthService } from './core/services/auth/auth.service';
 import { IdlePreloadStrategy } from './core/services/idle-preload.strategy';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideHttpClient(withInterceptors([authInterceptor])),
+    provideHttpClient(withInterceptors([authInterceptor, analysisRefreshInterceptor])),
     provideAppInitializer(() => firstValueFrom(inject(AuthService).restoreSession())),
     provideRouter(
       routes,

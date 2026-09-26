@@ -1,6 +1,6 @@
 import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import { Observable, of, tap } from 'rxjs';
-import { AuthService, type UserProfile } from '../../../core/services/auth/auth.service';
+import { AuthService, type UserPreferencesPayload, type UserProfile } from '../../../core/services/auth/auth.service';
 import { LanguageService, type AppLanguage } from '../../../core/services/language.service';
 
 export interface ProfilePreferences {
@@ -26,26 +26,19 @@ export interface ProfileState {
   bio: string;
 }
 
-const STORAGE_PREFS = 'dlt.profile.prefs';
-const STORAGE_WELLNESS = 'dlt.profile.wellness';
-const STORAGE_BIO = 'dlt.profile.bio';
+const DEFAULT_PREFS: ProfilePreferences = {
+  activitySummary: true,
+  wellnessReminders: true,
+  quietHoursEnabled: false,
+  quietStart: '22:00',
+  quietEnd: '07:00',
+};
 
-function read<T>(key: string, fallback: T): T {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? { ...fallback, ...(JSON.parse(raw) as T) } : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function write(key: string, value: unknown): void {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // storage unavailable — keep in-memory state
-  }
-}
+const DEFAULT_WELLNESS: WellnessPreferences = {
+  sleepTarget: 8,
+  waterTarget: 2.5,
+  activeMinutesTarget: 45,
+};
 
 function fromAuthProfile(profile: UserProfile | null, fallback: ProfileState): ProfileState {
   if (!profile) {
@@ -57,7 +50,7 @@ function fromAuthProfile(profile: UserProfile | null, fallback: ProfileState): P
     email: profile.email,
     timezone: profile.timezone || fallback.timezone,
     language: profile.preferredLanguage || fallback.language,
-    bio: fallback.bio,
+    bio: profile.bio || fallback.bio,
   };
 }
 
@@ -65,6 +58,7 @@ function fromAuthProfile(profile: UserProfile | null, fallback: ProfileState): P
 export class ProfileService {
   private readonly auth = inject(AuthService);
   private readonly languageService = inject(LanguageService);
+  private loadedUserId: string | null = null;
 
   private readonly defaults: ProfileState = {
     firstName: '',
@@ -72,7 +66,7 @@ export class ProfileService {
     email: '',
     timezone: 'Africa/Casablanca',
     language: 'fr',
-    bio: read(STORAGE_BIO, ''),
+    bio: '',
   };
 
   readonly state = signal<ProfileState>(
@@ -83,22 +77,8 @@ export class ProfileService {
       email: this.auth.currentUser()?.email ?? '',
     }),
   );
-  readonly prefs = signal<ProfilePreferences>(
-    read<ProfilePreferences>(STORAGE_PREFS, {
-      activitySummary: true,
-      wellnessReminders: true,
-      quietHoursEnabled: false,
-      quietStart: '22:00',
-      quietEnd: '07:00',
-    }),
-  );
-  readonly wellness = signal<WellnessPreferences>(
-    read<WellnessPreferences>(STORAGE_WELLNESS, {
-      sleepTarget: 8,
-      waterTarget: 2.5,
-      activeMinutesTarget: 45,
-    }),
-  );
+  readonly prefs = signal<ProfilePreferences>({ ...DEFAULT_PREFS });
+  readonly wellness = signal<WellnessPreferences>({ ...DEFAULT_WELLNESS });
 
   readonly languageName = computed(() => {
     const code = this.state().language;
@@ -115,18 +95,26 @@ export class ProfileService {
           firstName: user?.firstName ?? current.firstName,
           lastName: user?.lastName ?? current.lastName,
           email: user?.email ?? current.email,
-          bio: current.bio || read(STORAGE_BIO, ''),
         }),
       );
       const language = profile?.preferredLanguage;
       if (language === 'fr' || language === 'en' || language === 'ar') {
         this.languageService.setLanguage(language);
       }
+      if (user && this.loadedUserId !== user.id) {
+        this.loadedUserId = user.id;
+        this.auth.getPreferences().subscribe({
+          next: (payload) => this.applyRemote(payload),
+          error: () => void 0,
+        });
+      }
+      if (!user) {
+        this.loadedUserId = null;
+      }
     }, { allowSignalWrites: true });
   }
 
   saveProfile(profile: ProfileState): Observable<UserProfile | null> {
-    write(STORAGE_BIO, profile.bio);
     this.state.set(profile);
     if (profile.language === 'fr' || profile.language === 'en' || profile.language === 'ar') {
       this.languageService.setLanguage(profile.language as AppLanguage);
@@ -140,17 +128,42 @@ export class ProfileService {
         lastName: profile.lastName,
         preferredLanguage: profile.language,
         timezone: profile.timezone,
+        bio: profile.bio,
       })
       .pipe(tap(() => this.state.update((current) => ({ ...current, ...profile }))));
   }
 
   savePrefs(prefs: ProfilePreferences): void {
     this.prefs.set(prefs);
-    write(STORAGE_PREFS, prefs);
+    this.persistExtras();
   }
 
   saveWellness(wellness: WellnessPreferences): void {
     this.wellness.set(wellness);
-    write(STORAGE_WELLNESS, wellness);
+    this.persistExtras();
+  }
+
+  private applyRemote(payload: UserPreferencesPayload): void {
+    if (payload.bio) {
+      this.state.update((current) => ({ ...current, bio: payload.bio ?? current.bio }));
+    }
+    if (payload.profilePrefs) {
+      this.prefs.set({ ...DEFAULT_PREFS, ...payload.profilePrefs });
+    }
+    if (payload.wellnessTargets) {
+      this.wellness.set({ ...DEFAULT_WELLNESS, ...payload.wellnessTargets });
+    }
+  }
+
+  private persistExtras(): void {
+    if (!this.auth.currentUser()) {
+      return;
+    }
+    this.auth
+      .updatePreferences({
+        profilePrefs: this.prefs(),
+        wellnessTargets: this.wellness(),
+      })
+      .subscribe({ error: () => void 0 });
   }
 }

@@ -10,7 +10,7 @@ This repository contains the **Angular frontend**. It talks to the Spring Boot A
 
 ## Features
 
-- **Authentication** — real JWT login / register / refresh / logout (FR/EN/AR)
+- **Authentication** — JWT login / register / refresh / logout, plus Google Sign-In (FR/EN/AR)
 - **Dashboard** — "How is my day going?" bento overview: productivity, schedule, tasks, hydration, sleep, mood, stress, fatigue, free time, AI recommendation
 - **Planning** — daily timeline with tasks, events, time blocks, free time and overload detection
 - **Tasks** — list, search, filters, priority, categories, create / edit / delete / complete
@@ -82,6 +82,8 @@ npm start
 
 Open `http://localhost:4200/`. `ng serve` proxies `/api` to the gateway on port `8080`.
 
+Set `googleClientId` in `src/environments/environment.ts` to the same Google Identity Services web client ID as backend `GOOGLE_CLIENT_ID`. Authorized JavaScript origins in Google Cloud Console must include `http://localhost:4200`. Do not put the value in components. Production builds read `environment.prod.ts` (`googleClientId` empty until you set it).
+
 ### Production build
 
 ```bash
@@ -123,7 +125,7 @@ Each feature area is isolated (components, models, services) and lazy-loaded whe
 
 ## Not in the backend yet
 
-These UI pieces stay local or placeholder until the API exists: forgot password, OAuth, admin, contact form, task subtasks, calendar participants, and appearance/privacy toggles.
+These UI pieces stay local or placeholder until the API exists: admin extras, task subtasks, calendar participants, and some appearance/privacy toggles.
 
 ---
 

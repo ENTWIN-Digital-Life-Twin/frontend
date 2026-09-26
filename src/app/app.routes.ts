@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 import { SeoConfig } from './core/services/seo/seo.service';
-import { authGuard } from './core/guards/auth.guard';
+import { authGuard, profileCompleteGuard, skipOnboardingIfCompleteGuard } from './core/guards/auth.guard';
 import { adminGuard } from './core/guards/admin.guard';
 
 export function seo(config: SeoConfig): { seo: SeoConfig } {
@@ -18,6 +18,24 @@ export const routes: Routes = [
     }), preload: false },
   },
   {
+    path: 'forgot-password',
+    loadComponent: () =>
+      import('./features/auth/forgot-password/forgot-password').then((m) => m.ForgotPasswordComponent),
+    data: { ...seo({
+      title: 'Mot de passe oublié — Digital Life Twin',
+      description: 'Réinitialisez le mot de passe de votre compte Digital Life Twin.',
+    }), preload: false },
+  },
+  {
+    path: 'reset-password',
+    loadComponent: () =>
+      import('./features/auth/reset-password/reset-password').then((m) => m.ResetPasswordComponent),
+    data: { ...seo({
+      title: 'Nouveau mot de passe — Digital Life Twin',
+      description: 'Choisissez un nouveau mot de passe pour votre compte Digital Life Twin.',
+    }), preload: false },
+  },
+  {
     path: 'register',
     loadComponent: () =>
       import('./features/auth/register/register.component').then((m) => m.RegisterComponent),
@@ -25,6 +43,17 @@ export const routes: Routes = [
       title: 'Créer un compte — Digital Life Twin',
       description:
         'Créez votre compte gratuit et centralisez votre planning, vos habitudes et votre bien-être au même endroit.',
+    }), preload: false },
+  },
+  {
+    path: 'onboarding',
+    loadComponent: () =>
+      import('./features/auth/onboarding/onboarding.component').then((m) => m.OnboardingComponent),
+    canActivate: [authGuard, skipOnboardingIfCompleteGuard],
+    data: { ...seo({
+      title: 'Complete your profile — Digital Life Twin',
+      description: 'Add sex, height, weight and wellness goals to personalize Digital Life Twin.',
+      robots: 'noindex, nofollow',
     }), preload: false },
   },
   {
@@ -70,13 +99,37 @@ export const routes: Routes = [
             'Une question, une idée, un retour ? Contactez l\'équipe Digital Life Twin. Temps de réponse moyen : moins de 24 h.',
         }),
       },
+      {
+        path: 'terms',
+        loadComponent: () =>
+          import('./features/public/pages/legal/legal-page').then((m) => m.LegalPageComponent),
+        data: {
+          kind: 'terms',
+          ...seo({
+            title: 'Terms of use — Digital Life Twin',
+            description: 'Terms of use for the Digital Life Twin platform.',
+          }),
+        },
+      },
+      {
+        path: 'privacy',
+        loadComponent: () =>
+          import('./features/public/pages/legal/legal-page').then((m) => m.LegalPageComponent),
+        data: {
+          kind: 'privacy',
+          ...seo({
+            title: 'Privacy policy — Digital Life Twin',
+            description: 'How Digital Life Twin collects, uses and protects your personal data.',
+          }),
+        },
+      },
     ],
   },
   {
     path: '',
     loadComponent: () =>
       import('./layout/components/app-shell/app-shell').then((m) => m.AppShell),
-    canActivate: [authGuard],
+    canActivate: [authGuard, profileCompleteGuard],
     data: { ...seo({
       title: 'Digital Life Twin',
       robots: 'noindex, nofollow',

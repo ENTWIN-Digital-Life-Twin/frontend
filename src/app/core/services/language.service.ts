@@ -180,11 +180,11 @@ export class LanguageService {
       }
     }
 
-    if (typeof result !== 'string') {
+    if (result === undefined || result === null) {
       return key as unknown as T;
     }
 
-    if (vars) {
+    if (typeof result === 'string' && vars) {
       Object.entries(vars).forEach(([k, v]) => {
         result = (result as string).replace(
           new RegExp(`{{${k}}}`, 'g'),

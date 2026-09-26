@@ -93,11 +93,30 @@ export const FR_TRANSLATIONS = {
       hourShort: 'h',
     },
   },
+  adminPage: {
+    eyebrow: 'Plateforme',
+    title: 'Administration',
+    description: 'Utilisateurs, statuts de compte et messages de contact.',
+    users: 'Utilisateurs',
+    active: 'Actifs',
+    admins: 'Admins',
+    contacts: 'Messages',
+    usersTitle: 'Comptes',
+    contactsTitle: 'Messages de contact',
+    name: 'Nom',
+    email: 'E-mail',
+    status: 'Statut',
+    roles: 'Rôles',
+    disable: 'Désactiver',
+    enable: 'Activer',
+    noContacts: 'Aucun message de contact pour le moment.',
+  },
   settings: {
     title: 'Paramètres',
     subtitle: 'Personnalisez votre compte, votre expérience et vos préférences.',
     nav: {
       account: 'Compte',
+      security: 'Sécurité',
       appearance: 'Apparence',
       notifications: 'Notifications',
       preferences: 'Préférences',
@@ -127,6 +146,20 @@ export const FR_TRANSLATIONS = {
       emailRequired: 'L\'adresse email est obligatoire.',
       emailInvalid: 'Adresse email invalide.',
       toastUpdated: 'Modifications enregistrées avec succès.',
+    },
+    security: {
+      subtitle: 'Changez votre mot de passe ou réinitialisez-le par e-mail.',
+      passwordTitle: 'Mot de passe',
+      changePassword: 'Mettre à jour le mot de passe',
+      currentPassword: 'Mot de passe actuel',
+      newPassword: 'Nouveau mot de passe',
+      confirmPassword: 'Confirmer le mot de passe',
+      savePassword: 'Enregistrer',
+      resetTitle: 'Réinitialisation par e-mail',
+      resetHint: 'Nous pouvons envoyer un lien unique si vous n’avez plus votre mot de passe actuel.',
+      resetAction: 'Envoyer le lien',
+      toastUpdated: 'Mot de passe mis à jour.',
+      toastFailed: 'Impossible de mettre à jour le mot de passe. Vérifiez le mot de passe actuel.',
     },
     accessibility: {
       subtitle: 'Adaptez l\'expérience à vos besoins.',
@@ -433,7 +466,11 @@ export const FR_TRANSLATIONS = {
       typeAria: 'Type de donnée',
       quantity: 'Quantité d’eau',
       hydrationHint: 'Chaque prise est ajoutée au suivi du jour.',
-      sleepHint: 'La durée est calculée automatiquement.',
+      sleepDuration: 'Durée de sommeil',
+      sleepHours: 'Heures',
+      sleepMinutes: 'Minutes',
+      sleepHint:
+        'La durée est l’écart entre le coucher et le réveil, y compris si la nuit passe minuit. Saisissez heures et minutes pour mettre à jour l’heure de réveil.',
       moodAria: 'Humeur',
       stressAria: 'Stress',
       activityDuration: 'Durée de l’activité',
@@ -755,6 +792,8 @@ export const FR_TRANSLATIONS = {
     activeMinutes: 'Minutes actives',
     caloriesBurned: 'kcal brûlées',
     stepsToday: 'Pas aujourd’hui',
+    logSteps: 'Enregistrer les pas',
+    saveSteps: 'Enregistrer',
     minutesThisWeek: 'min cette semaine',
     activity: 'Activité',
     thisWeek: 'Cette semaine',
@@ -768,6 +807,7 @@ export const FR_TRANSLATIONS = {
       cycling: 'Vélo',
       gym: 'Musculation',
       stretching: 'Étirements',
+      other: 'Autre',
     },
     history: 'Historique',
     yourSessions: 'Vos séances',
@@ -812,6 +852,8 @@ export const FR_TRANSLATIONS = {
     },
     emptyTitle: 'Aucune notification',
     emptyDescription: 'Vous êtes à jour. Vous retrouverez ici vos rappels et recommandations.',
+    upcomingTitle: 'Rappels à venir',
+    upcomingEmpty: 'Aucun rappel à venir. Ajoutez-en un à la création d’un événement.',
     open: 'Ouvrir : {{title}}',
     markRead: 'Marquer comme lue',
     deleteNotification: 'Supprimer la notification',
@@ -1036,7 +1078,14 @@ export const FR_TRANSLATIONS = {
       'Est-ce que ma journée est trop chargée ?',
       'Quand dois-je partir pour ma réunion ?',
       'Comment améliorer ma journée ?',
+      'Crée une tâche : finir mon rapport hebdomadaire',
     ],
+    createTask: 'Créer cette tâche',
+    taskCreated: 'Tâche ajoutée à votre liste.',
+    taskCreateFailed: 'La tâche n’a pas pu être créée. Réessayez depuis Tâches.',
+  },
+  formAssist: {
+    heading: 'Suggestions IA',
   },
   profile: {
     eyebrow: 'Compte',
@@ -1118,6 +1167,8 @@ export const FR_TRANSLATIONS = {
     notes: 'Notes',
     notesPlaceholder: 'Notes, liens, ressources…',
     titleRequired: 'Le titre est obligatoire.',
+    aiHint: 'Suggestions IA',
+    apply: 'Utiliser',
   },
   tasksDetail: {
     close: 'Fermer les détails',
@@ -1167,6 +1218,7 @@ export const FR_TRANSLATIONS = {
     titleRequired: 'Le titre est obligatoire.',
     save: 'Enregistrer',
     create: 'Créer l’événement',
+    aiHint: 'Suggestions IA',
     reminders: {
       none: 'Aucun rappel',
       '5': '5 min avant',
@@ -1336,13 +1388,17 @@ export const FR_TRANSLATIONS = {
   nutritionForm: {
     editTitle: 'Modifier le repas',
     newTitle: 'Ajouter un repas',
-    subtitle: 'Renseignez les informations nutritionnelles du repas.',
+    subtitle: 'Choisissez le repas, puis ajoutez chaque aliment avec sa quantité. Calories et macros sont calculés automatiquement.',
     type: 'Type de repas',
     time: 'Heure',
     name: 'Nom du repas',
     namePlaceholder: 'Ex. Poulet grillé + riz',
     foods: 'Aliments',
-    foodsHint: 'Séparez les aliments par des virgules.',
+    foodsHint: 'Sélectionnez un aliment et saisissez la quantité en grammes (ex. Riz 100 g).',
+    addFood: 'Ajouter un aliment',
+    customName: 'Nom personnalisé',
+    searchMeals: 'Rechercher un repas',
+    noMealMatch: 'Aucun repas ne correspond.',
     foodsPlaceholder: 'Ex. Poulet grillé, riz complet, légumes vapeur',
     calories: 'Calories (kcal)',
     protein: 'Protéines (g)',
@@ -1360,7 +1416,7 @@ export const FR_TRANSLATIONS = {
   sportForm: {
     editTitle: 'Modifier l’activité',
     newTitle: 'Ajouter une activité',
-    subtitle: 'Enregistrez votre séance : type, durée, distance et calories.',
+    subtitle: 'Choisissez l’activité et la durée. Calories et intensité sont calculées automatiquement.',
     type: 'Type d’activité',
     title: 'Titre',
     titlePlaceholder: 'Footing du matin',
@@ -1374,6 +1430,7 @@ export const FR_TRANSLATIONS = {
     notesPlaceholder: 'Sensations, parcours, matériel…',
     save: 'Enregistrer',
     titleRequired: 'Le titre est obligatoire.',
+    durationRequired: 'La durée doit être d’au moins 5 minutes.',
     intensityOptions: {
       low: 'Légère',
       medium: 'Modérée',
@@ -1458,6 +1515,7 @@ export const FR_TRANSLATIONS = {
       primary: 'Navigation principale',
       mobile: 'Navigation mobile',
     },
+    weekdaysShort: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
     footer: {
       description:
         'Digital Life Twin centralise votre planning, vos habitudes et votre bien-être pour vous aider à mieux organiser chaque journée.',
@@ -1467,8 +1525,61 @@ export const FR_TRANSLATIONS = {
       createAccount: 'Créer un compte',
       home: 'Accueil',
       copyright: '© {{year}} Digital Life Twin. Tous droits réservés.',
+      terms: 'Conditions d’utilisation',
+      privacy: 'Politique de confidentialité',
       disclaimer:
         'Indicateurs de bien-être — ne remplace pas un avis médical professionnel.',
+    },
+    legal: {
+      badge: 'Mentions légales',
+      terms: {
+        title: 'Conditions d’utilisation',
+        updated: 'Dernière mise à jour : 26 septembre 2026',
+        intro:
+          'Ces conditions encadrent l’usage de Digital Life Twin (ENTWIN). Créer un compte vaut acceptation.',
+        sections: [
+          {
+            heading: 'Objet du service',
+            body: 'ENTWIN aide à organiser planning, habitudes et bien-être. Ce n’est pas un dispositif médical et il ne fournit ni diagnostic, ni traitement, ni urgence.',
+          },
+          {
+            heading: 'Votre compte',
+            body: 'Vous êtes responsable des informations que vous enregistrez et de la confidentialité de votre mot de passe. Vous pouvez le changer ou le réinitialiser dans Paramètres → Sécurité.',
+          },
+          {
+            heading: 'Usage acceptable',
+            body: 'N’utilisez pas le service de manière abusive et n’essayez pas d’accéder sans autorisation. Un compte peut être suspendu en cas de manquement.',
+          },
+          {
+            heading: 'Contact',
+            body: 'Les questions se posent depuis la page Contact. ENTWIN est un projet académique à visée pédagogique.',
+          },
+        ],
+      },
+      privacy: {
+        title: 'Politique de confidentialité',
+        updated: 'Dernière mise à jour : 26 septembre 2026',
+        intro:
+          'Cette politique décrit les données personnelles conservées pour faire fonctionner votre compte et le suivi bien-être.',
+        sections: [
+          {
+            heading: 'Données conservées',
+            body: 'Nous conservons le profil fourni, vos journaux de planning et de bien-être, ainsi que des données de sécurité (empreinte du mot de passe, codes de vérification).',
+          },
+          {
+            heading: 'Finalités',
+            body: 'Ces données servent à vous authentifier, personnaliser l’expérience, envoyer les e-mails transactionnels et améliorer le produit.',
+          },
+          {
+            heading: 'Partage',
+            body: 'Nous ne vendons pas vos données. Les e-mails passent par le SMTP configuré.',
+          },
+          {
+            heading: 'Vos choix',
+            body: 'Vous pouvez mettre à jour votre profil, changer de mot de passe, ou nous contacter pour demander la suppression du compte.',
+          },
+        ],
+      },
     },
     home: {
       hero: {
@@ -1877,8 +1988,17 @@ export const FR_TRANSLATIONS = {
     social: {
       label: 'ou continuer avec',
       google: 'Google',
-      apple: 'Apple',
-      notice: 'La connexion sociale sera disponible dans une prochaine version.',
+      errors: {
+        google_popup_closed: 'La connexion Google a été annulée.',
+        google_auth_failed: 'La connexion Google a échoué. Réessayez.',
+        invalid_google_token: 'Google n’a pas pu être vérifié. Réessayez.',
+        account_linking_required:
+          'Un compte existe déjà pour cet e-mail. Connectez-vous avec votre mot de passe.',
+        google_not_configured: 'La connexion Google n’est pas configurée.',
+        google_login_failed: 'La connexion Google a échoué. Réessayez.',
+        google_script_failed: 'Impossible de charger Google. Vérifiez votre connexion.',
+        google_email_unverified: 'Google n’a pas fourni d’e-mail vérifié.',
+      },
     },
     footer: {
       terms: 'Conditions d’utilisation',
@@ -1904,9 +2024,36 @@ export const FR_TRANSLATIONS = {
       forgotHint:
         'La réinitialisation de mot de passe sera disponible dans une prochaine version.',
       submit: 'Se connecter',
+      continue: 'Continuer',
+      steps: {
+        email: { title: 'Votre e-mail', subtitle: 'Nous demanderons ensuite votre mot de passe.' },
+        password: { title: 'Votre mot de passe', subtitle: 'Accédez à votre espace.' },
+      },
       noAccount: 'Pas encore de compte ?',
       createAccount: 'Créer un compte',
       error: 'E-mail ou mot de passe incorrect. Vérifiez vos identifiants et réessayez.',
+    },
+    forgot: {
+      eyebrow: 'Compte',
+      title: 'Mot de passe oublié ?',
+      subtitle: 'Saisissez votre e-mail. Si un compte existe, vous pourrez réinitialiser le mot de passe.',
+      submit: 'Envoyer le lien',
+      success: 'Si un compte existe pour cet e-mail, un lien de réinitialisation a été envoyé. Consultez votre boîte de réception.',
+      continue: 'Choisir un nouveau mot de passe',
+      back: 'Retour à la connexion',
+      error: 'Impossible de démarrer la réinitialisation. Réessayez.',
+    },
+    reset: {
+      eyebrow: 'Compte',
+      title: 'Nouveau mot de passe',
+      subtitle: 'Choisissez un mot de passe d’au moins 8 caractères.',
+      passwordLabel: 'Nouveau mot de passe',
+      passwordPlaceholder: 'Nouveau mot de passe',
+      confirmLabel: 'Confirmer le mot de passe',
+      missingToken: 'Ce lien de réinitialisation est incomplet. Demandez-en un nouveau depuis la page mot de passe oublié.',
+      submit: 'Mettre à jour',
+      success: 'Mot de passe mis à jour. Vous pouvez vous connecter.',
+      error: 'Ce lien de réinitialisation est invalide ou a expiré.',
     },
     register: {
       eyebrow: 'Nouveau compte',
@@ -1916,8 +2063,19 @@ export const FR_TRANSLATIONS = {
         label: 'Étape',
         of: 'sur',
         identity: { title: 'Identité', subtitle: 'Comment vous appelez-vous ?' },
-        account: { title: 'Compte', subtitle: 'Votre adresse e-mail' },
+        account: {
+          title: 'Votre compte',
+          subtitle: 'Nom, e-mail et mot de passe.',
+        },
+        verify: {
+          title: 'Vérifiez votre e-mail',
+          subtitle: 'Saisissez le code à 6 chiffres envoyé par e-mail.',
+        },
         security: { title: 'Sécurité', subtitle: 'Choisissez un mot de passe solide' },
+        profile: {
+          title: 'À propos de vous',
+          subtitle: 'Le sexe, la taille et le poids aident à personnaliser vos indicateurs bien-être.',
+        },
         terms: {
           title: 'Conditions',
           subtitle: 'Lisez et acceptez nos conditions d’utilisation',
@@ -1925,6 +2083,10 @@ export const FR_TRANSLATIONS = {
         personalization: {
           title: 'Personnalisation',
           subtitle: 'Adaptez l’application à vos objectifs',
+        },
+        goals: {
+          title: 'Vos objectifs',
+          subtitle: 'Sommeil, hydratation, activité — et acceptez les conditions.',
         },
       },
       confirm: {
@@ -1944,6 +2106,27 @@ export const FR_TRANSLATIONS = {
         water: 'Objectif d’hydratation',
         activity: 'Objectif d’activité',
         dailySummary: 'Résumé quotidien',
+        gender: 'Sexe',
+        height: 'Taille',
+        weight: 'Poids',
+      },
+      profile: {
+        gender: 'Sexe',
+        dateOfBirth: 'Date de naissance',
+        height: 'Taille (cm)',
+        weight: 'Poids (kg)',
+        occupation: 'Occupation',
+        range: 'Saisissez une valeur réaliste.',
+        genderOptions: [
+          { value: 'FEMALE', label: 'Femme' },
+          { value: 'MALE', label: 'Homme' },
+        ],
+        occupationOptions: [
+          { value: 'STUDENT', label: 'Étudiant' },
+          { value: 'EMPLOYEE', label: 'Salarié' },
+          { value: 'BOTH', label: 'Étudiant et salarié' },
+          { value: 'OTHER', label: 'Autre' },
+        ],
       },
       personalization: {
         sleepLabel: 'Objectif de sommeil',
@@ -1980,6 +2163,14 @@ export const FR_TRANSLATIONS = {
       emailPlaceholder: 'vous@exemple.fr',
       passwordLabel: 'Mot de passe',
       confirmLabel: 'Confirmer le mot de passe',
+      codeLabel: 'Code de vérification',
+      codePlaceholder: '000000',
+      codeHint: 'Consultez votre boîte mail pour un code à 6 chiffres. Il expire dans 10 minutes.',
+      resend: 'Renvoyer le code',
+      emailTaken: 'Un compte existe déjà pour cet e-mail.',
+      codeInvalid: 'Ce code de vérification est invalide ou expiré.',
+      mailFailed: 'Impossible d’envoyer l’e-mail de vérification. Réessayez dans un instant.',
+      error: 'Impossible de créer le compte. Réessayez.',
       termsAria: 'J’accepte les conditions d’utilisation',
       termsPrefix: 'J’accepte les',
       termsLink: 'conditions d’utilisation',
@@ -1992,6 +2183,14 @@ export const FR_TRANSLATIONS = {
       successTitle: 'Compte créé !',
       successText: 'Bienvenue dans Digital Life Twin, {{name}}. Votre espace est prêt.',
       goDashboard: 'Accéder au tableau de bord',
+    },
+    onboarding: {
+      eyebrow: 'Bienvenue',
+      title: 'Complétez votre profil',
+      subtitle:
+        'Google ne partage que votre nom et votre e-mail. Ajoutez le sexe, la taille, le poids et vos objectifs bien-être pour personnaliser ENTWIN.',
+      submit: 'Enregistrer et continuer',
+      error: 'Impossible d’enregistrer le profil. Réessayez.',
     },
   },
   search: {

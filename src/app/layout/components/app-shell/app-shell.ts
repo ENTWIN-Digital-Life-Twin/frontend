@@ -6,6 +6,8 @@ import { Header } from '../app-header/app-header';
 import { Sidebar } from '../app-sidebar/app-sidebar';
 import { SidebarContent } from '../sidebar-content/sidebar-content';
 import { Drawer } from '../../../shared/ui/drawer/drawer';
+import { NotificationService } from '../../../features/notifications/services/notification.service';
+import { ReminderService } from '../../../features/notifications/services/reminder.service';
 
 @Component({
   selector: 'app-shell',
@@ -33,8 +35,16 @@ export class AppShell {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
   private readonly page = viewChild<ElementRef<HTMLElement>>('page');
+  private readonly notifications = inject(NotificationService);
+  private readonly reminders = inject(ReminderService);
 
   constructor() {
+    this.reminders.startSession();
+    this.notifications.startSession();
+    this.destroyRef.onDestroy(() => {
+      this.reminders.stopSession();
+      this.notifications.stopSession();
+    });
     this.router.events
       .pipe(
         filter((event): event is NavigationEnd => event instanceof NavigationEnd),
