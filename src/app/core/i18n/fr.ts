@@ -842,6 +842,7 @@ export const FR_TRANSLATIONS = {
       wellness: 'Bien-être',
       ai: 'IA',
       system: 'Système',
+      security: 'Sécurité',
     },
     types: {
       task: 'Tâche',
@@ -849,11 +850,17 @@ export const FR_TRANSLATIONS = {
       wellness: 'Bien-être',
       ai: 'Insight IA',
       system: 'Système',
+      security: 'Sécurité',
     },
     emptyTitle: 'Aucune notification',
     emptyDescription: 'Vous êtes à jour. Vous retrouverez ici vos rappels et recommandations.',
     upcomingTitle: 'Rappels à venir',
     upcomingEmpty: 'Aucun rappel à venir. Ajoutez-en un à la création d’un événement.',
+    security: {
+      newDeviceTitle: 'Connexion depuis un nouvel appareil',
+      newDeviceMessage:
+        'Une connexion a été détectée depuis {{device}}. Si ce n’était pas vous, changez votre mot de passe.',
+    },
     open: 'Ouvrir : {{title}}',
     markRead: 'Marquer comme lue',
     deleteNotification: 'Supprimer la notification',

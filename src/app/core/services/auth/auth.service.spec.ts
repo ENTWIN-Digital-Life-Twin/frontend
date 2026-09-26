@@ -49,6 +49,7 @@ describe('AuthService Google login', () => {
 
     const googleReq = httpMock.expectOne(`${environment.authApiUrl}/auth/google`);
     expect(googleReq.request.body).toEqual({ credential: 'google-id-token' });
+    expect(googleReq.request.headers.get('X-Device-Id')).toBeTruthy();
     googleReq.flush(authBody);
 
     httpMock.expectOne(`${environment.authApiUrl}/users/me`).flush({

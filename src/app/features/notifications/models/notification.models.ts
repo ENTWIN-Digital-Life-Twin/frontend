@@ -4,10 +4,11 @@ import {
   LucideCalendar,
   LucideHeart,
   LucideListTodo,
+  LucideShield,
   LucideSparkles,
 } from '@lucide/angular';
 
-export type NotificationType = 'task' | 'calendar' | 'wellness' | 'ai' | 'system';
+export type NotificationType = 'task' | 'calendar' | 'wellness' | 'ai' | 'system' | 'security';
 export type NotificationSection = 'today' | 'week' | 'older';
 export type NotificationFilter = 'all' | NotificationType | 'unread';
 
@@ -32,6 +33,7 @@ export const NOTIFICATION_TYPE_KEYS: Record<NotificationType, string> = {
   wellness: 'notifications.types.wellness',
   ai: 'notifications.types.ai',
   system: 'notifications.types.system',
+  security: 'notifications.types.security',
 };
 
 export const NOTIFICATION_TYPE_ICONS: Record<NotificationType, LucideIcon> = {
@@ -40,6 +42,7 @@ export const NOTIFICATION_TYPE_ICONS: Record<NotificationType, LucideIcon> = {
   wellness: LucideHeart,
   ai: LucideSparkles,
   system: LucideBell,
+  security: LucideShield,
 };
 
 export const NOTIFICATION_TYPE_CHIP: Record<NotificationType, string> = {
@@ -48,6 +51,7 @@ export const NOTIFICATION_TYPE_CHIP: Record<NotificationType, string> = {
   wellness: 'bg-teal-50 text-accent-dark',
   ai: 'bg-warning-light text-warning',
   system: 'bg-surface-muted text-ink-muted',
+  security: 'bg-danger-light text-danger',
 };
 
 export function sectionFor(notification: AppNotification): NotificationSection {

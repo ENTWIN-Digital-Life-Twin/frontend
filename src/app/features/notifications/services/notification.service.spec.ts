@@ -4,6 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { environment } from '../../../../environments/environment';
 import { TokenStorageService } from '../../../core/services/auth/token-storage.service';
+import { LanguageService } from '../../../core/services/language.service';
 import { NotificationService } from './notification.service';
 
 describe('NotificationService', () => {
@@ -19,6 +20,7 @@ describe('NotificationService', () => {
         provideHttpClientTesting(),
         NotificationService,
         { provide: TokenStorageService, useValue: tokenStorage },
+        { provide: LanguageService, useValue: { translate: (key: string) => key } },
       ],
     });
     service = TestBed.inject(NotificationService);
@@ -38,6 +40,12 @@ describe('NotificationService', () => {
     tokenStorage.getAccessToken.mockReturnValue('jwt');
     service.startSession();
 
+    httpMock
+      .expectOne(
+        (req) =>
+          req.method === 'POST' && req.url === `${environment.notificationApiUrl}/notifications/bootstrap`,
+      )
+      .flush({ created: 9 });
     httpMock
       .expectOne(
         (req) =>

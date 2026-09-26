@@ -30,7 +30,7 @@ describe('ReminderService', () => {
     httpMock.verify();
   });
 
-  it('seeds daily water, meal and sleep reminders after login', () => {
+  it('seeds daily water, meal, sleep and planning reminders after login', () => {
     tokenStorage.getAccessToken.mockReturnValue('jwt');
     service.startSession();
 
@@ -43,9 +43,13 @@ describe('ReminderService', () => {
     const created = httpMock.match(
       (req) => req.method === 'POST' && req.url === `${environment.notificationApiUrl}/reminders`,
     );
-    expect(created).toHaveLength(3);
-    const types = created.map((req) => req.request.body.reminderType).sort();
-    expect(types).toEqual(['MEAL', 'SLEEP', 'WATER']);
+    expect(created).toHaveLength(11);
+    const types = created.map((req) => req.request.body.reminderType);
+    expect(types.filter((type) => type === 'WATER')).toHaveLength(3);
+    expect(types.filter((type) => type === 'MEAL')).toHaveLength(3);
+    expect(types).toContain('SLEEP');
+    expect(types).toContain('WORKOUT');
+    expect(types).toContain('CUSTOM');
     created.forEach((req, index) => {
       req.flush({
         id: `r-${index}`,

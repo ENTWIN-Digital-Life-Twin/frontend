@@ -4,6 +4,7 @@ import { Observable, catchError, finalize, map, of, switchMap, tap, throwError }
 import { environment } from '../../../../environments/environment';
 import { User, UserRole } from '../../models/user';
 import { TokenStorageService } from './token-storage.service';
+import { captureNewDeviceFlag, deviceHeaders } from './device-id';
 
 export interface LoginPayload {
   email: string;
@@ -87,6 +88,7 @@ interface AuthResponse {
   tokenType: string;
   expiresIn: number;
   user: UserResponse;
+  newDevice?: boolean;
 }
 
 export interface UserPreferencesPayload {
@@ -187,14 +189,19 @@ export class AuthService {
 
   login(payload: LoginPayload): Observable<User> {
     return this.http
-      .post<AuthResponse>(`${this.baseUrl}/login`, {
-        email: payload.email,
-        password: payload.password,
-      })
+      .post<AuthResponse>(
+        `${this.baseUrl}/login`,
+        {
+          email: payload.email,
+          password: payload.password,
+        },
+        { headers: deviceHeaders() },
+      )
       .pipe(
-        tap((res) =>
-          this.tokenStorage.setTokens(res.accessToken, res.refreshToken, payload.rememberMe),
-        ),
+        tap((res) => {
+          this.tokenStorage.setTokens(res.accessToken, res.refreshToken, payload.rememberMe);
+          captureNewDeviceFlag(res.newDevice);
+        }),
         switchMap((res) =>
           this.loadProfile().pipe(
             map(() => toUser(res.user)),
@@ -207,8 +214,13 @@ export class AuthService {
   }
 
   loginWithGoogle(credential: string, rememberMe = true): Observable<User> {
-    return this.http.post<AuthResponse>(`${this.baseUrl}/google`, { credential }).pipe(
-      tap((res) => this.tokenStorage.setTokens(res.accessToken, res.refreshToken, rememberMe)),
+    return this.http
+      .post<AuthResponse>(`${this.baseUrl}/google`, { credential }, { headers: deviceHeaders() })
+      .pipe(
+        tap((res) => {
+          this.tokenStorage.setTokens(res.accessToken, res.refreshToken, rememberMe);
+          captureNewDeviceFlag(res.newDevice);
+        }),
       switchMap((res) =>
         this.loadProfile().pipe(
           map(() => toUser(res.user)),

@@ -841,6 +841,7 @@ export const EN_TRANSLATIONS = {
       wellness: 'Well-being',
       ai: 'AI',
       system: 'System',
+      security: 'Security',
     },
     types: {
       task: 'Task',
@@ -848,11 +849,17 @@ export const EN_TRANSLATIONS = {
       wellness: 'Well-being',
       ai: 'AI insight',
       system: 'System',
+      security: 'Security',
     },
     emptyTitle: 'No notifications',
     emptyDescription: 'You are all caught up. Your reminders and recommendations will appear here.',
     upcomingTitle: 'Upcoming reminders',
     upcomingEmpty: 'No upcoming reminders. Add one when you create an event.',
+    security: {
+      newDeviceTitle: 'Sign-in from a new device',
+      newDeviceMessage:
+        'A sign-in was detected from {{device}}. If this was not you, change your password.',
+    },
     open: 'Open: {{title}}',
     markRead: 'Mark as read',
     deleteNotification: 'Delete notification',

@@ -829,6 +829,7 @@ export const AR_TRANSLATIONS = {
       wellness: 'الرفاهية',
       ai: 'الذكاء الاصطناعي',
       system: 'النظام',
+      security: 'الأمان',
     },
     types: {
       task: 'مهمة',
@@ -836,11 +837,17 @@ export const AR_TRANSLATIONS = {
       wellness: 'رفاهية',
       ai: 'رؤية ذكاء اصطناعي',
       system: 'نظام',
+      security: 'أمان',
     },
     emptyTitle: 'لا توجد إشعارات',
     emptyDescription: 'أنت على اطلاع دائم. ستجد هنا تذكيراتك وتوصياتك.',
     upcomingTitle: 'التذكيرات القادمة',
     upcomingEmpty: 'لا توجد تذكيرات قادمة. أضف تذكيراً عند إنشاء حدث.',
+    security: {
+      newDeviceTitle: 'تسجيل دخول من جهاز جديد',
+      newDeviceMessage:
+        'تم رصد تسجيل دخول من {{device}}. إذا لم تكن أنت، غيّر كلمة المرور.',
+    },
     open: 'فتح: {{title}}',
     markRead: 'تحديد كمقروء',
     deleteNotification: 'حذف الإشعار',

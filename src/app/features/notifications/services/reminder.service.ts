@@ -46,24 +46,80 @@ const DAILY_DEFAULTS: Array<{
 }> = [
   {
     reminderType: 'WATER',
-    title: 'Drink water',
-    message: 'A glass of water keeps you on track with your hydration goal.',
-    hour: 10,
+    title: 'Eau du matin',
+    message: 'Un verre d’eau au réveil aide à démarrer l’hydratation.',
+    hour: 8,
+    minute: 0,
+  },
+  {
+    reminderType: 'WATER',
+    title: 'Eau de midi',
+    message: 'Pensez à boire un verre d’eau avant le déjeuner.',
+    hour: 12,
+    minute: 0,
+  },
+  {
+    reminderType: 'WATER',
+    title: 'Eau de l’après-midi',
+    message: 'Une pause hydratation pour rester concentré.',
+    hour: 16,
     minute: 0,
   },
   {
     reminderType: 'MEAL',
-    title: 'Log your meal',
-    message: 'Take a moment to record what you eat.',
+    title: 'Petit-déjeuner',
+    message: 'Notez votre petit-déjeuner pour un suivi nutritionnel fiable.',
+    hour: 8,
+    minute: 30,
+  },
+  {
+    reminderType: 'MEAL',
+    title: 'Déjeuner',
+    message: 'Prenez un moment pour enregistrer votre repas.',
     hour: 12,
     minute: 30,
   },
   {
+    reminderType: 'MEAL',
+    title: 'Dîner',
+    message: 'Clôturez la journée en notant votre dîner.',
+    hour: 19,
+    minute: 30,
+  },
+  {
+    reminderType: 'WORKOUT',
+    title: 'Pause active',
+    message: 'Levez-vous quelques minutes : une courte marche suffit.',
+    hour: 15,
+    minute: 0,
+  },
+  {
+    reminderType: 'WORKOUT',
+    title: 'Séance sport',
+    message: 'C’est le bon moment pour une activité physique, même courte.',
+    hour: 18,
+    minute: 0,
+  },
+  {
     reminderType: 'SLEEP',
-    title: 'Wind down',
-    message: 'Prepare for a good night of sleep.',
+    title: 'Préparer le sommeil',
+    message: 'Diminuez les écrans et préparez-vous à une nuit plus calme.',
     hour: 22,
     minute: 0,
+  },
+  {
+    reminderType: 'CUSTOM',
+    title: 'Bilan de la journée',
+    message: 'Relisez vos tâches et cochez ce qui est terminé.',
+    hour: 21,
+    minute: 0,
+  },
+  {
+    reminderType: 'CUSTOM',
+    title: 'Organiser demain',
+    message: 'Jetez un œil au planning de demain pour partir serein.',
+    hour: 21,
+    minute: 30,
   },
 ];
 
@@ -116,7 +172,7 @@ export class ReminderService {
         (a, b) =>
           new Date(a.nextTriggerAt).getTime() - new Date(b.nextTriggerAt).getTime(),
       )
-      .slice(0, 8);
+      .slice(0, 12);
   });
 
   startSession(): void {
@@ -227,7 +283,7 @@ export class ReminderService {
     const existing = this.remindersSignal();
     for (const preset of DAILY_DEFAULTS) {
       const already = existing.some(
-        (reminder) => reminder.reminderType === preset.reminderType && reminder.recurring,
+        (reminder) => reminder.title === preset.title && reminder.recurring,
       );
       if (already) {
         continue;

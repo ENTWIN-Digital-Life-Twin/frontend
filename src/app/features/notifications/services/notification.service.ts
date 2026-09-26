@@ -1,7 +1,10 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
+import { catchError, of, switchMap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
+import { LanguageService } from '../../../core/services/language.service';
 import { TokenStorageService } from '../../../core/services/auth/token-storage.service';
+import { consumeNewDeviceLabel } from '../../../core/services/auth/device-id';
 import {
   sectionFor,
   type AppNotification,
@@ -10,7 +13,7 @@ import {
   type NotificationType,
 } from '../models/notification.models';
 
-type BackendNotificationType = 'REMINDER' | 'WARNING' | 'INFO' | 'SYSTEM';
+type BackendNotificationType = 'REMINDER' | 'WARNING' | 'INFO' | 'SYSTEM' | 'SECURITY';
 type BackendNotificationStatus = 'SCHEDULED' | 'SENT' | 'READ' | 'FAILED' | 'CANCELLED';
 type BackendSourceType = 'TASK' | 'EVENT' | 'WELLNESS_GOAL' | 'CUSTOM' | null;
 
@@ -42,6 +45,9 @@ interface PageResponse<T> {
 }
 
 function typeFromResponse(res: NotificationResponse): NotificationType {
+  if (res.notificationType === 'SECURITY') {
+    return 'security';
+  }
   switch (res.sourceType) {
     case 'TASK':
       return 'task';
@@ -79,8 +85,10 @@ const POLL_MS = 45_000;
 export class NotificationService {
   private readonly http = inject(HttpClient);
   private readonly tokenStorage = inject(TokenStorageService);
+  private readonly languageService = inject(LanguageService);
   private readonly baseUrl = `${environment.notificationApiUrl}/notifications`;
   private pollHandle: ReturnType<typeof setInterval> | null = null;
+  private primed = false;
 
   private readonly notificationsSignal = signal<AppNotification[]>([]);
   readonly notifications = this.notificationsSignal.asReadonly();
@@ -129,14 +137,20 @@ export class NotificationService {
     if (!this.tokenStorage.getAccessToken()) {
       return;
     }
-    this.refresh();
+    if (!this.primed) {
+      this.prime();
+      this.primed = true;
+    } else {
+      this.load();
+    }
     if (this.pollHandle) {
       return;
     }
-    this.pollHandle = setInterval(() => this.refresh(), POLL_MS);
+    this.pollHandle = setInterval(() => this.load(), POLL_MS);
   }
 
   stopSession(): void {
+    this.primed = false;
     if (this.pollHandle) {
       clearInterval(this.pollHandle);
       this.pollHandle = null;
@@ -144,22 +158,61 @@ export class NotificationService {
   }
 
   refresh(): void {
+    if (this.primed) {
+      this.load();
+      return;
+    }
+    this.prime();
+  }
+
+  private prime(): void {
     if (!this.tokenStorage.getAccessToken()) {
       return;
     }
     this.http
-      .get<PageResponse<NotificationResponse>>(this.baseUrl, {
-        params: new HttpParams()
-          .set('page', '0')
-          .set('size', '50')
-          .set('sort', 'scheduledAt,desc'),
-      })
+      .post<{ created: number }>(`${this.baseUrl}/bootstrap`, {})
+      .pipe(
+        catchError(() => of({ created: 0 })),
+        switchMap(() => this.publishNewDeviceIfNeeded()),
+        switchMap(() => this.fetchPage()),
+      )
       .subscribe({
         next: (page) => this.notificationsSignal.set(page.content.map(fromResponse)),
-        error: (err) => {
-          console.error('Failed to load notifications', err);
-        },
+        error: (err) => console.error('Failed to load notifications', err),
       });
+  }
+
+  private load(): void {
+    if (!this.tokenStorage.getAccessToken()) {
+      return;
+    }
+    this.fetchPage().subscribe({
+      next: (page) => this.notificationsSignal.set(page.content.map(fromResponse)),
+      error: (err) => console.error('Failed to load notifications', err),
+    });
+  }
+
+  private fetchPage() {
+    return this.http.get<PageResponse<NotificationResponse>>(this.baseUrl, {
+      params: new HttpParams().set('page', '0').set('size', '50').set('sort', 'scheduledAt,desc'),
+    });
+  }
+
+  private publishNewDeviceIfNeeded() {
+    const label = consumeNewDeviceLabel();
+    if (!label) {
+      return of(null);
+    }
+    return this.http
+      .post(`${this.baseUrl}`, {
+        notificationType: 'SECURITY',
+        title: this.languageService.translate('notifications.security.newDeviceTitle'),
+        message: this.languageService.translate('notifications.security.newDeviceMessage', {
+          device: label,
+        }),
+        sourceType: 'CUSTOM',
+      })
+      .pipe(catchError(() => of(null)));
   }
 
   setFilter(filter: NotificationFilter): void {

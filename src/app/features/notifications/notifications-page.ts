@@ -321,6 +321,7 @@ export class NotificationsPage implements AfterViewInit {
         'wellness',
         'ai',
         'system',
+        'security',
       ] as NotificationFilter[]
     ).map((value) => ({
       value,
@@ -334,6 +335,7 @@ export class NotificationsPage implements AfterViewInit {
     wellness: this.languageService.translate(NOTIFICATION_TYPE_KEYS.wellness),
     ai: this.languageService.translate(NOTIFICATION_TYPE_KEYS.ai),
     system: this.languageService.translate(NOTIFICATION_TYPE_KEYS.system),
+    security: this.languageService.translate(NOTIFICATION_TYPE_KEYS.security),
   }));
 
   protected readonly groups = computed(() => this.service.grouped());
