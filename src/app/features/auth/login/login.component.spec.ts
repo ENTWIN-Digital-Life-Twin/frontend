@@ -75,7 +75,7 @@ describe('LoginComponent', () => {
 
   it('should initialize form with the demo account', () => {
     expect(component['form'].value).toEqual({
-      email: 'lamiaeamgr@gmail.com',
+      email: 'amina.bennani@example.com',
       password: 'EntwinDemo2026!',
     });
   });

@@ -1,7 +1,7 @@
 export const environment = {
   production: true,
   demoAutoLogin: true,
-  demoEmail: 'lamiaeamgr@gmail.com',
+  demoEmail: 'amina.bennani@example.com',
   demoPassword: 'EntwinDemo2026!',
   authApiUrl: '/api',
   planningApiUrl: '/api/v1',
