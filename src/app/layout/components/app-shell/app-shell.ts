@@ -9,6 +9,7 @@ import { Drawer } from '../../../shared/ui/drawer/drawer';
 import { BottomNav } from '../bottom-nav/bottom-nav';
 import { NotificationService } from '../../../features/notifications/services/notification.service';
 import { ReminderService } from '../../../features/notifications/services/reminder.service';
+import { AuthService } from '../../../core/services/auth/auth.service';
 
 @Component({
   selector: 'app-shell',
@@ -16,7 +17,13 @@ import { ReminderService } from '../../../features/notifications/services/remind
     <div class="min-h-dvh bg-background">
       <app-sidebar />
 
-      <div class="min-h-dvh pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:ps-[280px] lg:pb-0">
+      <div
+        [class]="
+          isAdmin()
+            ? 'min-h-dvh lg:ps-[280px]'
+            : 'min-h-dvh pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:ps-[280px] lg:pb-0'
+        "
+      >
         <app-header (menu)="drawerOpen.set(true)" />
         <main #page class="mx-auto w-full max-w-[1320px] px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
           <router-outlet />
@@ -34,6 +41,8 @@ import { ReminderService } from '../../../features/notifications/services/remind
 })
 export class AppShell {
   readonly drawerOpen = signal(false);
+  private readonly auth = inject(AuthService);
+  protected readonly isAdmin = () => this.auth.currentUser()?.role === 'admin';
 
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);

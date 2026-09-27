@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { catchError, forkJoin, map, of, switchMap, timeout, type Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
+import { AuthService, type UserProfile } from '../../../core/services/auth/auth.service';
 import { DashboardService } from '../../../core/services/dashboard/dashboard.service';
 import type { AiCategory, LocalizedAiInsight, RiskLevel } from '../models/ai.models';
 import { analysisConfidence, recommendationConfidence } from './analysis-confidence';
@@ -101,6 +102,7 @@ function priorityToRisk(priority: string): RiskLevel {
 export class AiService {
   private readonly http = inject(HttpClient);
   private readonly dashboard = inject(DashboardService);
+  private readonly auth = inject(AuthService);
   private readonly baseUrl = `${environment.aiApiUrl}/ai`;
   private readonly wellnessUrl = `${environment.wellnessApiUrl}/wellness`;
 
@@ -181,31 +183,40 @@ export class AiService {
       });
   }
 
-  /** Sends a chat message to the FastAPI IA service (Ollama-backed). */
+  /** Sends a chat message to the FastAPI assistant (hosted Qwen 2.5). */
   sendMessage(message: string, history: ChatTurn[] = []): Observable<string> {
     return this.sendChat(message, history).pipe(map((res) => res.answer));
   }
 
   sendChat(message: string, history: ChatTurn[] = []): Observable<ChatReply> {
     this.dashboard.loadAll();
-    return this.http
-      .get<WeeklyWellnessSummary>(`${this.wellnessUrl}/summary/weekly`, {
-        params: { startDate: startDate() },
-      })
-      .pipe(
-        timeout({ first: 8_000 }),
-        catchError(() => of(this.weeklySummarySignal())),
-        switchMap((summary) => {
-          if (summary) {
-            this.weeklySummarySignal.set(summary);
+    return forkJoin({
+      summary: this.http
+        .get<WeeklyWellnessSummary>(`${this.wellnessUrl}/summary/weekly`, {
+          params: { startDate: startDate() },
+        })
+        .pipe(timeout({ first: 8_000 }), catchError(() => of(this.weeklySummarySignal()))),
+      profile: this.auth.getProfile().pipe(catchError(() => of(this.auth.profile()))),
+      tasks: this.recent(`${environment.planningApiUrl}/tasks`),
+      events: this.recent(`${environment.planningApiUrl}/events`),
+      sleep: this.recent(`${this.wellnessUrl}/sleep`),
+      water: this.recent(`${this.wellnessUrl}/water`),
+      meals: this.recent(`${this.wellnessUrl}/meals`),
+      mood: this.recent(`${this.wellnessUrl}/mood`),
+      workouts: this.recent(`${this.wellnessUrl}/workouts`),
+      health: this.recent(`${this.wellnessUrl}/health-records`),
+    }).pipe(
+        switchMap((loaded) => {
+          if (loaded.summary) {
+            this.weeklySummarySignal.set(loaded.summary);
           }
           return this.http.post<ChatResponse>(`${this.baseUrl}/chat`, {
             question: message,
             history: history.slice(-12),
-            context: this.chatContext(summary),
+            context: this.chatContext(loaded.summary, loaded),
           });
         }),
-        timeout({ first: 20_000 }),
+        timeout({ first: 45_000 }),
         map((res) => {
           const answer = (res.answer || res.reply || '').trim();
           if (!answer) {
@@ -285,8 +296,97 @@ export class AiService {
     return insights;
   }
 
-  private chatContext(summary: WeeklyWellnessSummary | null = this.weeklySummarySignal()): Record<string, unknown> {
+  private recent(url: string): Observable<Record<string, unknown>[]> {
+    return this.http
+      .get<{ content?: Record<string, unknown>[] }>(url, { params: { page: '0', size: '30' } })
+      .pipe(
+        timeout({ first: 8_000 }),
+        map((page) => (page.content ?? []).slice(0, 30).map((row) => this.compact(row))),
+        catchError(() => of([])),
+      );
+  }
+
+  private compact(row: Record<string, unknown>): Record<string, unknown> {
+    const keep = [
+      'title',
+      'status',
+      'priority',
+      'startDateTime',
+      'endDateTime',
+      'deadline',
+      'plannedDurationMinutes',
+      'eventType',
+      'sleepStart',
+      'wakeTime',
+      'durationMinutes',
+      'qualityScore',
+      'quantityMl',
+      'consumedAt',
+      'beverageType',
+      'mealType',
+      'description',
+      'mealTime',
+      'totalCalories',
+      'recordedAt',
+      'moodLevel',
+      'stressLevel',
+      'fatigueLevel',
+      'activityType',
+      'startedAt',
+      'intensity',
+      'stepCount',
+      'weightKg',
+    ];
+    const compact: Record<string, unknown> = {};
+    for (const key of keep) {
+      const value = row[key];
+      if (value != null && value !== '') {
+        compact[key] = value;
+      }
+    }
+    return compact;
+  }
+
+  private chatContext(
+    summary: WeeklyWellnessSummary | null = this.weeklySummarySignal(),
+    records?: {
+      profile: UserProfile | null;
+      tasks: Record<string, unknown>[];
+      events: Record<string, unknown>[];
+      sleep: Record<string, unknown>[];
+      water: Record<string, unknown>[];
+      meals: Record<string, unknown>[];
+      mood: Record<string, unknown>[];
+      workouts: Record<string, unknown>[];
+      health: Record<string, unknown>[];
+    },
+  ): Record<string, unknown> {
+    const profile = records?.profile ?? this.auth.profile();
     return {
+      profile: profile
+        ? {
+            firstName: profile.firstName,
+            lastName: profile.lastName,
+            gender: profile.gender,
+            heightCm: profile.heightCm,
+            weightKg: profile.weightKg,
+            occupationType: profile.occupationType,
+            timezone: profile.timezone,
+            dateOfBirth: profile.dateOfBirth,
+          }
+        : null,
+      records: records
+        ? {
+            tasks: records.tasks,
+            events: records.events,
+            sleep: records.sleep,
+            water: records.water,
+            meals: records.meals,
+            mood: records.mood,
+            workouts: records.workouts,
+            health: records.health,
+          }
+        : undefined,
       planning: this.dashboard.stats(),
       wellness: this.dashboard.wellness(),
       weeklyWellness: this.dashboard.weeklyWellness(),
@@ -328,6 +428,11 @@ export class AiService {
 
   private localChatReply(message: string, history: ChatTurn[] = []): ChatReply {
     const lowered = this.effectiveQuestion(message, history).toLowerCase();
+    if (/\b(illegal|crime|lawyer|court|police|drug|weapon|porn|nude|sexual|illégal|drogue|avocat)\b/i.test(lowered)) {
+      return this.plainReply(
+        "I can talk about your schedule, tasks, sleep, meals, activity and how to use ENTWIN. I don't discuss laws, illegal activity, or taboo topics.",
+      );
+    }
     const wellness = this.dashboard.wellness();
     const planning = this.dashboard.stats();
     const summary = this.weeklySummarySignal();

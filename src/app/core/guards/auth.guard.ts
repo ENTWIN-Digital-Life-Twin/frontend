@@ -27,10 +27,26 @@ export const profileCompleteGuard: CanActivateFn = () => {
   if (!authService.currentUser()) {
     return router.createUrlTree(['/login']);
   }
+  if (authService.currentUser()?.role === 'admin') {
+    return true;
+  }
   if (authService.needsOnboarding()) {
     return router.createUrlTree(['/onboarding']);
   }
   return true;
+};
+
+/** Keeps an administrator on the admin page. */
+export const redirectAdminFromAppGuard: CanActivateFn = (route) => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+  if (authService.currentUser()?.role !== 'admin') {
+    return true;
+  }
+  if (route.routeConfig?.path === 'admin') {
+    return true;
+  }
+  return router.createUrlTree(['/admin']);
 };
 
 export const skipOnboardingIfCompleteGuard: CanActivateFn = () => {

@@ -88,25 +88,25 @@
         }
       </div>
 
-      <div class="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <button
-          appButton
-          variant="secondary"
-          type="button"
-          class="w-full sm:w-auto"
-          [class.max-sm:hidden]="step() === 0"
-          [class.invisible]="step() === 0"
-          (click)="onBack()"
-          [disabled]="status() === 'loading'"
-        >
-          <svg lucideArrowLeft class="mirror-rtl h-4 w-4" aria-hidden="true"></svg>
-          {{ backLabel() }}
-        </button>
+      <div class="mt-8 grid w-full gap-3" [class.sm:grid-cols-2]="step() !== 0">
+        @if (step() !== 0) {
+          <button
+            appButton
+            variant="secondary"
+            type="button"
+            class="w-full max-sm:order-2"
+            (click)="onBack()"
+            [disabled]="status() === 'loading'"
+          >
+            <svg lucideArrowLeft class="mirror-rtl h-4 w-4" aria-hidden="true"></svg>
+            {{ backLabel() }}
+          </button>
+        }
         <button
           appButton
           variant="primary"
           type="submit"
-          class="w-full sm:min-w-40"
+          class="w-full max-sm:order-1"
           size="lg"
           [loading]="status() === 'loading'"
           [disabled]="status() === 'loading'"

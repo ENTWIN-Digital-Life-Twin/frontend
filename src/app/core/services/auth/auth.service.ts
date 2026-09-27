@@ -379,6 +379,10 @@ export class AuthService {
       .pipe(map(toProfile));
   }
 
+  deleteAccount(userId: string): Observable<void> {
+    return this.http.delete<void>(`${this.usersUrl}/admin/users/${userId}`).pipe(map(() => void 0));
+  }
+
   deleteContact(contactId: string): Observable<void> {
     return this.http
       .delete<void>(`${this.usersUrl}/admin/contacts/${contactId}`)
@@ -398,6 +402,9 @@ export class AuthService {
   }
 
   afterAuthPath(): string {
+    if (this.currentUser()?.role === 'admin') {
+      return '/admin';
+    }
     return this.needsOnboarding() ? '/onboarding' : '/dashboard';
   }
 
@@ -421,6 +428,10 @@ export class AuthService {
     this.tokenStorage.clear();
     this.user.set(null);
     this.profileSignal.set(null);
+  }
+
+  getProfile(): Observable<UserProfile> {
+    return this.loadProfile();
   }
 
   private loadProfile(): Observable<UserProfile> {

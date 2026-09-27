@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 import { SeoConfig } from './core/services/seo/seo.service';
-import { authGuard, profileCompleteGuard, skipOnboardingIfCompleteGuard } from './core/guards/auth.guard';
+import { authGuard, profileCompleteGuard, redirectAdminFromAppGuard, skipOnboardingIfCompleteGuard } from './core/guards/auth.guard';
 import { adminGuard } from './core/guards/admin.guard';
 import { nativeMarketingGuard } from './core/guards/native-entry.guard';
 
@@ -140,6 +140,7 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./layout/components/app-shell/app-shell').then((m) => m.AppShell),
     canActivate: [authGuard, profileCompleteGuard],
+    canActivateChild: [redirectAdminFromAppGuard],
     data: { ...seo({
       title: 'Digital Life Twin',
       robots: 'noindex, nofollow',

@@ -12,6 +12,7 @@ import {
 } from '@lucide/angular';
 import type { LucideIcon } from '@lucide/angular';
 import { LanguageService } from '../../../core/services/language.service';
+import { AuthService } from '../../../core/services/auth/auth.service';
 
 interface BottomTab {
   path: string;
@@ -30,6 +31,7 @@ const TABS: BottomTab[] = [
   selector: 'app-bottom-nav',
   imports: [RouterLink, LucideDynamicIcon, LucideEllipsis],
   template: `
+    @if (!isAdmin()) {
     <nav
       class="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 backdrop-blur-lg lg:hidden"
       [style.padding-bottom]="'env(safe-area-inset-bottom)'"
@@ -62,6 +64,7 @@ const TABS: BottomTab[] = [
         </li>
       </ul>
     </nav>
+    }
   `,
 })
 export class BottomNav {
@@ -69,6 +72,9 @@ export class BottomNav {
 
   private readonly router = inject(Router);
   private readonly languageService = inject(LanguageService);
+  private readonly auth = inject(AuthService);
+
+  protected readonly isAdmin = computed(() => this.auth.currentUser()?.role === 'admin');
 
   private readonly url = toSignal(
     this.router.events.pipe(

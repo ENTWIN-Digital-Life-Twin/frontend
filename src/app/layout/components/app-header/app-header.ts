@@ -68,6 +68,7 @@ import { NotificationService } from '../../../features/notifications/services/no
         </button>
 
         <!-- Mobile search button -->
+        @if (!isAdmin()) {
         <button
           appButton
           variant="secondary"
@@ -78,7 +79,9 @@ import { NotificationService } from '../../../features/notifications/services/no
         >
           <svg lucideSearch class="h-5 w-5" aria-hidden="true"></svg>
         </button>
+        }
 
+        @if (!isAdmin()) {
         <!-- Desktop search input + panel -->
         <div class="relative hidden min-w-0 flex-1 md:block md:max-w-sm" #searchWrapper>
           <label class="relative block">
@@ -192,6 +195,9 @@ import { NotificationService } from '../../../features/notifications/services/no
             }
           </div>
         }
+        } @else {
+        <div class="flex-1"></div>
+        }
 
         <div class="ms-auto flex items-center gap-1.5 sm:gap-2.5">
           <div class="me-1 hidden flex-col items-end xl:flex">
@@ -203,6 +209,7 @@ import { NotificationService } from '../../../features/notifications/services/no
 
           <div class="hidden h-6 w-px bg-line sm:block"></div>
 
+          @if (!isAdmin()) {
           <a
             routerLink="/notifications"
             class="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-panel text-ink-muted transition-colors duration-200 hover:bg-surface-muted hover:text-primary"
@@ -215,6 +222,7 @@ import { NotificationService } from '../../../features/notifications/services/no
               ></span>
             }
           </a>
+          }
 
           <app-language-selector tone="surface" />
 
@@ -250,6 +258,7 @@ import { NotificationService } from '../../../features/notifications/services/no
                 </div>
                 <div class="h-px bg-line" aria-hidden="true"></div>
               }
+              @if (!isAdmin()) {
               <a routerLink="/profile" appDropdownItem class="mt-1 text-ink-muted">
                 <svg lucideUser class="h-4 w-4 shrink-0" aria-hidden="true"></svg>
                 <span>{{ profileLabel() }}</span>
@@ -258,11 +267,6 @@ import { NotificationService } from '../../../features/notifications/services/no
                 <svg lucideSettings class="h-4 w-4 shrink-0" aria-hidden="true"></svg>
                 <span>{{ settingsLabel() }}</span>
               </a>
-              @if (isAdmin()) {
-                <a routerLink="/admin" appDropdownItem class="text-ink-muted">
-                  <svg lucideShield class="h-4 w-4 shrink-0" aria-hidden="true"></svg>
-                  <span>{{ adminLabel() }}</span>
-                </a>
               }
               <div class="my-1 h-px bg-line" aria-hidden="true"></div>
               <button

@@ -1,5 +1,8 @@
 export const environment = {
   production: false,
+  demoAutoLogin: false,
+  demoEmail: 'lamiaeamgr@gmail.com',
+  demoPassword: 'EntwinDemo2026!',
   authApiUrl: '/api',
   planningApiUrl: '/api/v1',
   wellnessApiUrl: '/api/v1',

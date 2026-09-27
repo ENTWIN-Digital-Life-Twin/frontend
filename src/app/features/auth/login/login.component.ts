@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { LucideArrowLeft, LucideEye, LucideEyeOff, LucideInfo, LucideLock, LucideMail } from '@lucide/angular';
@@ -9,6 +9,7 @@ import { Button } from '../../../shared/ui/button/button';
 import { Checkbox } from '../../../shared/ui/checkbox/checkbox';
 import { Field } from '../../../shared/ui/field/field';
 import { InputDirective } from '../../../shared/directives/field-control/field-control';
+import { environment } from '../../../../environments/environment';
 import { AuthShell } from '../components/auth-shell/auth-shell';
 import { AuthPageShell } from '../components/auth-page-shell/auth-page-shell';
 import { AuthHeading } from '../components/auth-heading/auth-heading';
@@ -41,7 +42,7 @@ type FormStatus = 'idle' | 'loading' | 'error';
     LucideMail,
   ],
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
@@ -75,8 +76,8 @@ export class LoginComponent {
   protected readonly socialLabel = this.trSignal('auth.social.label');
 
   protected readonly form = this.fb.nonNullable.group({
-    email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(6)]],
+    email: [environment.demoEmail, [Validators.required, Validators.email]],
+    password: [environment.demoPassword, [Validators.required, Validators.minLength(6)]],
   });
 
   protected readonly rememberMe = signal(false);
@@ -96,6 +97,18 @@ export class LoginComponent {
   protected readonly primaryLabel = computed(() =>
     this.step() === 0 ? this.continueLabel() : this.submit(),
   );
+
+  ngOnInit(): void {
+    if (!environment.demoAutoLogin) {
+      return;
+    }
+    if (this.authService.currentUser()) {
+      void this.router.navigate([this.authService.afterAuthPath()]);
+      return;
+    }
+    this.step.set(1);
+    this.onSubmit();
+  }
 
   protected segmentActive(index: number): boolean {
     return index < this.displayedStep();
@@ -160,7 +173,7 @@ export class LoginComponent {
       error: (error) => {
         this.status.set('error');
         console.error('Login failed:', error);
-        this.form.controls.password.reset();
+        this.form.controls.password.setValue(environment.demoPassword);
       },
     });
   }

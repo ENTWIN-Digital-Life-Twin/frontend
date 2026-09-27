@@ -73,10 +73,10 @@ describe('LoginComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should initialize form with empty values', () => {
+  it('should initialize form with the demo account', () => {
     expect(component['form'].value).toEqual({
-      email: '',
-      password: '',
+      email: 'lamiaeamgr@gmail.com',
+      password: 'EntwinDemo2026!',
     });
   });
 

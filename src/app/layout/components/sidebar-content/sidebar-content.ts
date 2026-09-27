@@ -13,7 +13,7 @@ import { LanguageService } from '../../../core/services/language.service';
         <app-brand-logo
           tone="light"
           size="md"
-          link="/dashboard"
+          [link]="homeLink()"
         />
       </div>
 
@@ -71,18 +71,23 @@ export class SidebarContent {
     this.languageService.translate<string>('footer.version'),
   );
 
-  protected readonly sections = computed(() =>
-    NAV_SECTIONS.map((section) => ({
+  protected readonly sections = computed(() => {
+    if (this.auth.currentUser()?.role === 'admin') {
+      return [];
+    }
+    return NAV_SECTIONS.map((section) => ({
       label: this.languageService.translate<string>(section.labelKey),
       items: section.items,
-    })),
-  );
+    }));
+  });
 
   protected readonly accountItems = computed(() =>
-    this.auth.currentUser()?.role === 'admin'
-      ? [...ACCOUNT_ITEMS, ADMIN_ITEM]
-      : ACCOUNT_ITEMS,
+    this.auth.currentUser()?.role === 'admin' ? [ADMIN_ITEM] : ACCOUNT_ITEMS,
   );
+
+  protected homeLink(): string {
+    return this.auth.currentUser()?.role === 'admin' ? '/admin' : '/dashboard';
+  }
 
   protected onNavigate(): void {
     this.navigate.emit();

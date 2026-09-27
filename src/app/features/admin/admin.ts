@@ -222,26 +222,15 @@ type RoleFilter = 'all' | 'admin' | 'user';
                     <td class="py-3 text-ink-faint">{{ user.createdAt | date: 'mediumDate' }}</td>
                     <td class="py-3 text-right" (click)="$event.stopPropagation()">
                       @if (!isSelf(user)) {
-                        <div class="flex justify-end gap-2">
-                          <button
-                            appButton
-                            variant="secondary"
-                            size="sm"
-                            [disabled]="busyId() === user.id"
-                            (click)="toggleStatus(user)"
-                          >
-                            {{ user.accountStatus === 'ACTIVE' ? disableLabel() : enableLabel() }}
-                          </button>
-                          <button
-                            appButton
-                            variant="ghost"
-                            size="sm"
-                            [disabled]="busyId() === user.id || (isAdmin(user) && !canDemote(user))"
-                            (click)="toggleRole(user)"
-                          >
-                            {{ isAdmin(user) ? demoteLabel() : promoteLabel() }}
-                          </button>
-                        </div>
+                        <button
+                          appButton
+                          variant="secondary"
+                          size="sm"
+                          [disabled]="busyId() === user.id"
+                          (click)="deleteUser(user)"
+                        >
+                          {{ deleteLabel() }}
+                        </button>
                       }
                     </td>
                   </tr>
@@ -332,19 +321,9 @@ type RoleFilter = 'all' | 'admin' | 'user';
           </div>
           @if (!isSelf(user)) {
             <div class="flex flex-col gap-2 border-t border-line px-5 py-4">
-              <button appButton variant="secondary" [disabled]="busyId() === user.id" (click)="toggleStatus(user)">
-                {{ user.accountStatus === 'ACTIVE' ? disableLabel() : enableLabel() }}
+              <button appButton variant="danger" [disabled]="busyId() === user.id" (click)="deleteUser(user)">
+                {{ deleteLabel() }}
               </button>
-              <button
-                appButton
-                [disabled]="busyId() === user.id || (isAdmin(user) && !canDemote(user))"
-                (click)="toggleRole(user)"
-              >
-                {{ isAdmin(user) ? demoteLabel() : promoteLabel() }}
-              </button>
-              @if (isAdmin(user) && !canDemote(user)) {
-                <p class="text-xs text-ink-muted">{{ lastAdminLabel() }}</p>
-              }
             </div>
           }
         </div>
@@ -465,7 +444,6 @@ export class AdminComponent {
   protected readonly tabs = computed(() => [
     { id: 'overview' as const, label: this.languageService.translate<string>('adminPage.overview') },
     { id: 'users' as const, label: this.usersLabel() },
-    { id: 'messages' as const, label: this.contactsLabel() },
   ]);
 
   protected readonly statusFilters = computed(() => [
@@ -587,6 +565,42 @@ export class AdminComponent {
     this.selectedContact.set(item);
     this.confirmDeleteId.set(null);
     this.contactDrawerOpen.set(true);
+  }
+
+  protected deleteUser(user: UserProfile): void {
+    this.busyId.set(user.id);
+    this.actionError.set(null);
+    this.auth.deleteAccount(user.id).subscribe({
+      next: () => {
+        this.users.update((items) => items.filter((entry) => entry.id !== user.id));
+        this.stats.update((current) =>
+          current
+            ? {
+                ...current,
+                totalUsers: Math.max(0, current.totalUsers - 1),
+                activeUsers:
+                  user.accountStatus === 'ACTIVE'
+                    ? Math.max(0, current.activeUsers - 1)
+                    : current.activeUsers,
+                adminUsers: this.isAdmin(user)
+                  ? Math.max(0, current.adminUsers - 1)
+                  : current.adminUsers,
+              }
+            : current,
+        );
+        this.userDrawerOpen.set(false);
+        this.selectedUser.set(null);
+        this.busyId.set(null);
+      },
+      error: (error: unknown) => {
+        this.busyId.set(null);
+        this.actionError.set(
+          error instanceof HttpErrorResponse && error.status === 403
+            ? 'forbidden'
+            : 'failed',
+        );
+      },
+    });
   }
 
   protected toggleStatus(user: UserProfile): void {
